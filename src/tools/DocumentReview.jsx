@@ -548,6 +548,7 @@ export default function DocumentReview() {
   const [driveMode, setDriveMode]             = useState(false)
   const [driveFolderUrl, setDriveFolderUrl]   = useState('')
   const [priorFolderFound, setPriorFolderFound] = useState(null)
+  const [docCount, setDocCount]               = useState(0)
   const timerRef                              = useRef(null)
   const progressRef                           = useRef(null)
   const driveTokenRef                         = useRef(null)
@@ -582,6 +583,7 @@ export default function DocumentReview() {
 
     setPhase('processing')
     setApiError(null)
+    setDocCount(driveMode ? 0 : currentFiles.length)
     startTimers()
 
     let resolvedCurrentFiles = currentFiles
@@ -601,6 +603,7 @@ export default function DocumentReview() {
           await fetchFilesFromDrive(driveFolderUrl, taxYear, token)
 
         if (detectedClientName) setClientName(detectedClientName)
+        setDocCount(currentDriveFiles.length)
 
         if (currentDriveFiles.length === 0) {
           throw new Error('No PDF files found in that folder.')
@@ -984,7 +987,7 @@ export default function DocumentReview() {
               <div style={{ width: 36, height: 36, border: '3px solid #e8e4de', borderTopColor: '#c4722a', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <div style={{ fontFamily: 'sans-serif', fontSize: 14, color: '#8a8577' }}>{processingStep}</div>
               <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#c8c3bb' }}>
-                Analyzing {currentFiles.length} document{currentFiles.length !== 1 ? 's' : ''} for {clientName} · {elapsedSeconds}s
+                Analyzing {docCount} document{docCount !== 1 ? 's' : ''} for {clientName} · {elapsedSeconds}s
               </div>
             </div>
           )}

@@ -219,13 +219,21 @@ function loadGIS() {
 }
 
 function getOAuthToken(scope) {
+  const cacheKey = 'goog_token_' + scope
+  const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null')
+  if (cached && cached.expiry > Date.now()) return Promise.resolve(cached.token)
+
   return new Promise((resolve, reject) => {
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope,
-      callback: (resp) => resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token),
+      callback: (resp) => {
+        if (resp.error) { reject(new Error(resp.error)); return }
+        sessionStorage.setItem(cacheKey, JSON.stringify({ token: resp.access_token, expiry: Date.now() + 3500000 }))
+        resolve(resp.access_token)
+      },
     })
-    client.requestAccessToken({ prompt: 'consent' })
+    client.requestAccessToken({ prompt: '' })
   })
 }
 

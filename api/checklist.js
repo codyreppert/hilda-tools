@@ -1,5 +1,21 @@
 const AIRTABLE_TABLE = 'Client Checklist'
 
+const FORM_CHECKLIST_MAP = {
+  'W-2':                 'W-2s (all employers)',
+  '1099-INT':            '1099 forms (NEC, MISC, K, INT, DIV, B)',
+  '1099-DIV':            '1099 forms (NEC, MISC, K, INT, DIV, B)',
+  '1099-B':              '1099 forms (NEC, MISC, K, INT, DIV, B)',
+  '1099-NEC':            '1099 forms (NEC, MISC, K, INT, DIV, B)',
+  '1099-MISC':           '1099 forms (NEC, MISC, K, INT, DIV, B)',
+  '1099-K':              '1099 forms (NEC, MISC, K, INT, DIV, B)',
+  '1099-R':              'Retirement contributions',
+  '1099-G':              'Estimated tax payments',
+  'K-1':                 'K-1s (partnerships / S-corps)',
+  'Schedule C / P&L':    'Self-employment / side income details',
+  'Schedule E / Rental': 'Rental income (long-term / short-term)',
+  '1098':                'Mortgage interest statements (1098)',
+}
+
 async function fetchAllRecords(token, baseId) {
   const records = []
   let offset = null
@@ -93,6 +109,36 @@ module.exports = async function handler(req, res) {
     try {
       await batchCreate(token, baseId, records)
       return res.json({ ok: true })
+    } catch (e) {
+      return res.status(500).json({ error: e.message })
+    }
+  }
+
+  if (req.method === 'POST' && action === 'detect') {
+    const { clientName, formTypes } = req.body || {}
+    if (!clientName || !Array.isArray(formTypes))
+      return res.status(400).json({ error: 'clientName and formTypes[] required' })
+    try {
+      const allRecords = await fetchAllRecords(token, baseId)
+      const clientRecords = allRecords.filter(
+        r => (r.fields['Client Name'] || '').trim().toLowerCase() === clientName.trim().toLowerCase()
+      )
+      if (clientRecords.length === 0)
+        return res.json({ ok: true, updated: 0, warn: `"${clientName}" not found in checklist` })
+
+      const targetLabels = new Set(formTypes.map(ft => FORM_CHECKLIST_MAP[ft]).filter(Boolean))
+      const toUpdate = clientRecords.filter(r =>
+        (r.fields['Status'] || 'Not Started') === 'Not Started' &&
+        targetLabels.has(r.fields['Checklist Item'])
+      )
+      await Promise.all(toUpdate.map(r =>
+        fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(AIRTABLE_TABLE)}/${r.id}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { Status: 'Detected' } }),
+        })
+      ))
+      return res.json({ ok: true, updated: toUpdate.length })
     } catch (e) {
       return res.status(500).json({ error: e.message })
     }

@@ -7,6 +7,8 @@ const CHECKLIST_TABLE = 'Client Checklist'
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const GOOGLE_SHEETS_ID = import.meta.env.VITE_GOOGLE_SHEETS_ID
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets'
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.readonly'
+const COMBINED_SCOPE = SHEETS_SCOPE + ' ' + DRIVE_SCOPE
 const MOCK_MODE = false
 
 const MOCK_RESPONSE = `## W-2
@@ -185,72 +187,157 @@ function loadGIS() {
   })
 }
 
-async function sendToSheets({ clientName, taxYear, sections, onStatus }) {
+function getOAuthToken(scope) {
+  return new Promise((resolve, reject) => {
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope,
+      callback: (resp) => resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token),
+    })
+    client.requestAccessToken({ prompt: 'consent' })
+  })
+}
+
+function parseFolderIdFromUrl(url) {
+  const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/)
+  return m ? m[1] : null
+}
+
+async function fetchFilesFromDrive(folderUrl, taxYear, token) {
+  const folderId = parseFolderIdFromUrl(folderUrl)
+  if (!folderId) throw new Error('Could not parse folder ID from URL')
+
+  const folderMeta = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,parents`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  ).then(r => r.json())
+
+  let detectedClientName = ''
+  const parentId = folderMeta.parents?.[0]
+  if (parentId) {
+    const parentMeta = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${parentId}?fields=id,name`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    ).then(r => r.json())
+    detectedClientName = parentMeta.name || ''
+  }
+
+  const filesRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType='application/pdf'+and+trashed=false&fields=files(id,name,size)`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  ).then(r => r.json())
+
+  const priorYear = String(parseInt(taxYear) - 1)
+  let priorDriveFiles = []
+  if (parentId) {
+    const siblingsRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${parentId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+name='${priorYear}'+and+trashed=false&fields=files(id,name)`,
+      { headers: { Authorization: 'Bearer ' + token } }
+    ).then(r => r.json())
+    if (siblingsRes.files?.length > 0) {
+      const priorFolderId = siblingsRes.files[0].id
+      const priorFilesRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q='${priorFolderId}'+in+parents+and+mimeType='application/pdf'+and+trashed=false&fields=files(id,name,size)`,
+        { headers: { Authorization: 'Bearer ' + token } }
+      ).then(r => r.json())
+      priorDriveFiles = priorFilesRes.files || []
+    }
+  }
+
+  return { detectedClientName, currentDriveFiles: filesRes.files || [], priorDriveFiles }
+}
+
+async function downloadDriveFileAsBase64(fileId, token) {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  )
+  const buffer = await res.arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  bytes.forEach(b => (binary += String.fromCharCode(b)))
+  return btoa(binary)
+}
+
+async function sendToSheets({ clientName, taxYear, sections, onStatus, existingToken }) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_SHEETS_ID) {
     onStatus('error', 'VITE_GOOGLE_CLIENT_ID or VITE_GOOGLE_SHEETS_ID not set in .env')
     return
   }
 
-  onStatus('loading', 'Authorizing with Google...')
   await loadGIS()
-
-  const token = await new Promise((resolve, reject) => {
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SHEETS_SCOPE,
-      callback: (resp) => {
-        if (resp.error) reject(new Error(resp.error))
-        else resolve(resp.access_token)
-      },
-    })
-    client.requestAccessToken({ prompt: 'consent' })
-  })
+  let token = existingToken
+  if (!token) {
+    onStatus('loading', 'Authorizing with Google...')
+    token = await getOAuthToken(SHEETS_SCOPE)
+  }
 
   onStatus('loading', 'Writing to Google Sheets...')
 
-  // Check if sheet already has a header row
-  const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/Extracted!A1`
-  const checkRes = await fetch(checkUrl, { headers: { 'Authorization': 'Bearer ' + token } })
-  const checkData = await checkRes.json()
-  const hasHeader = checkData.values && checkData.values[0] && checkData.values[0][0] === 'Client'
-
+  const HEADER = ['Client', 'Date', 'Form Type', 'Field', 'Current Year', 'Prior Year', 'Source', 'Tax Year']
   const date = new Date().toLocaleDateString('en-US')
-  const rows = []
-
-  if (!hasHeader) {
-    rows.push(['Client', 'Date', 'Form Type', 'Field', 'Current Year', 'Prior Year', 'Source', 'Tax Year'])
-  }
-
+  const dataRows = []
   sections.forEach(section => {
     section.fields.forEach(field => {
       if (field.isTotal) return
-      rows.push([
-        clientName,
-        date,
-        section.formType,
-        field.label,
-        field.currentValue,
-        field.priorValue || '',
-        field.source,
-        taxYear,
-      ])
+      dataRows.push([clientName, date, section.formType, field.label,
+        field.currentValue, field.priorValue || '', field.source, taxYear])
     })
   })
 
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/Extracted!A1:H1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`
+  const authHeader = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ values: rows }),
-  })
+  // --- Per-client tab ---
+  const metaRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}?fields=sheets.properties.title`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  )
+  const meta = await metaRes.json()
+  const existingSheets = (meta.sheets || []).map(s => s.properties.title)
 
+  if (!existingSheets.includes(clientName)) {
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}:batchUpdate`,
+      { method: 'POST', headers: authHeader, body: JSON.stringify({ requests: [{ addSheet: { properties: { title: clientName } } }] }) }
+    )
+  }
+
+  const clientCheckRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/${encodeURIComponent(clientName)}!A1`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  )
+  const clientCheckData = await clientCheckRes.json()
+  const clientHasHeader = clientCheckData.values?.[0]?.[0] === 'Client'
+  const clientRows = clientHasHeader ? dataRows : [HEADER, ...dataRows]
+
+  const clientAppendRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/${encodeURIComponent(clientName)}!A1:H1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    { method: 'POST', headers: authHeader, body: JSON.stringify({ values: clientRows }) }
+  )
+  if (!clientAppendRes.ok) {
+    const err = await clientAppendRes.json()
+    throw new Error(err.error?.message || `Sheets API error ${clientAppendRes.status}`)
+  }
+
+  // --- Master Extracted tab ---
+  const checkRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/Extracted!A1`,
+    { headers: { Authorization: 'Bearer ' + token } }
+  )
+  const checkData = await checkRes.json()
+  const hasHeader = checkData.values?.[0]?.[0] === 'Client'
+  const extractedRows = hasHeader ? dataRows : [HEADER, ...dataRows]
+
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_ID}/values/Extracted!A1:H1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    { method: 'POST', headers: authHeader, body: JSON.stringify({ values: extractedRows }) }
+  )
   if (!res.ok) {
     const err = await res.json()
     throw new Error(err.error?.message || `Sheets API error ${res.status}`)
   }
 
-  onStatus('success', `${rows.length - 1} rows written to Google Sheets`)
+  onStatus('success', `${dataRows.length} rows written → "${clientName}" tab + Extracted`)
 }
 
 const CONTRIBUTION_LIMITS = {
@@ -302,6 +389,32 @@ const FORM_TYPE_MAP = [
   { pattern: /Schedule E|Rental/i, match: 'Rental' },
   { pattern: /^1098/i,             match: '1098' },
 ]
+
+const DETECT_FORM_MAP = [
+  { pattern: /^W-2/i,              key: 'W-2' },
+  { pattern: /^1099-INT/i,         key: '1099-INT' },
+  { pattern: /^1099-DIV/i,         key: '1099-DIV' },
+  { pattern: /^1099-B/i,           key: '1099-B' },
+  { pattern: /^1099-NEC/i,         key: '1099-NEC' },
+  { pattern: /^1099-MISC/i,        key: '1099-MISC' },
+  { pattern: /^1099-K/i,           key: '1099-K' },
+  { pattern: /^1099-R/i,           key: '1099-R' },
+  { pattern: /^1099-G/i,           key: '1099-G' },
+  { pattern: /^K-1/i,              key: 'K-1' },
+  { pattern: /Schedule C|P&L/i,    key: 'Schedule C / P&L' },
+  { pattern: /Schedule E|Rental/i, key: 'Schedule E / Rental' },
+  { pattern: /^1098/i,             key: '1098' },
+]
+
+function extractFormTypes(sections) {
+  const found = new Set()
+  sections.forEach(s => {
+    DETECT_FORM_MAP.forEach(({ pattern, key }) => {
+      if (pattern.test(s.formType)) found.add(key)
+    })
+  })
+  return [...found]
+}
 
 async function updateChecklist({ clientName, sections, onStatus }) {
   if (!AIRTABLE_TOKEN || !AIRTABLE_BASE_ID) {
@@ -393,8 +506,12 @@ export default function DocumentReview() {
   const [taxYear, setTaxYear]                 = useState('2025')
   const [sheetsStatus, setSheetsStatus]       = useState(null)
   const [checklistStatus, setChecklistStatus] = useState(null)
+  const [driveMode, setDriveMode]             = useState(false)
+  const [driveFolderUrl, setDriveFolderUrl]   = useState('')
+  const [priorFolderFound, setPriorFolderFound] = useState(null)
   const timerRef                              = useRef(null)
   const progressRef                           = useRef(null)
+  const driveTokenRef                         = useRef(null)
 
   useEffect(() => {
     return () => {
@@ -417,15 +534,19 @@ export default function DocumentReview() {
   }
 
   async function runExtraction() {
-    if (!clientName.trim()) { setClientNameError(true); return }
-    if (currentFiles.length === 0) { setApiError('Please upload at least one PDF document.'); return }
+    if (driveMode) {
+      if (!driveFolderUrl.trim()) { setApiError('Paste a Google Drive folder URL to continue.'); return }
+    } else {
+      if (!clientName.trim()) { setClientNameError(true); return }
+      if (currentFiles.length === 0) { setApiError('Please upload at least one PDF document.'); return }
+    }
 
     setPhase('processing')
     setApiError(null)
-    setProcessingStep('Reading PDF files...')
     startTimers()
 
     if (MOCK_MODE) {
+      setProcessingStep('Reading PDF files...')
       await new Promise(r => setTimeout(r, 2500))
       setProcessingStep('Organizing extraction results...')
       await new Promise(r => setTimeout(r, 500))
@@ -435,9 +556,56 @@ export default function DocumentReview() {
       return
     }
 
+    let resolvedCurrentFiles = currentFiles
+    let resolvedCurrentBase64List = null
+    let resolvedPriorFile = priorFile
+    let resolvedPriorBase64 = null
+
+    if (driveMode) {
+      try {
+        setProcessingStep('Authorizing with Google...')
+        await loadGIS()
+        const token = await getOAuthToken(COMBINED_SCOPE)
+        driveTokenRef.current = token
+
+        setProcessingStep('Reading folder from Google Drive...')
+        const { detectedClientName, currentDriveFiles, priorDriveFiles } =
+          await fetchFilesFromDrive(driveFolderUrl, taxYear, token)
+
+        if (detectedClientName) setClientName(detectedClientName)
+
+        if (currentDriveFiles.length === 0) {
+          throw new Error('No PDF files found in that folder.')
+        }
+
+        setProcessingStep(`Downloading ${currentDriveFiles.length} document${currentDriveFiles.length !== 1 ? 's' : ''}...`)
+        resolvedCurrentBase64List = await Promise.all(
+          currentDriveFiles.map(f => downloadDriveFileAsBase64(f.id, token))
+        )
+        resolvedCurrentFiles = currentDriveFiles
+
+        if (priorDriveFiles.length > 0) {
+          setPriorFolderFound(true)
+          const autoSelected = priorDriveFiles.find(f => /1040|return|tax/i.test(f.name)) || priorDriveFiles[0]
+          resolvedPriorBase64 = await downloadDriveFileAsBase64(autoSelected.id, token)
+          resolvedPriorFile = autoSelected
+        } else {
+          setPriorFolderFound(false)
+        }
+      } catch (err) {
+        stopTimers()
+        setApiError(err.message)
+        setPhase('empty')
+        return
+      }
+    }
+
     try {
-      const currentBase64List = await Promise.all(currentFiles.map(readFileAsBase64))
-      const priorBase64 = priorFile ? await readFileAsBase64(priorFile) : null
+      setProcessingStep('Reading PDF files...')
+      const currentBase64List = resolvedCurrentBase64List ||
+        await Promise.all(resolvedCurrentFiles.map(readFileAsBase64))
+      const priorBase64 = resolvedPriorBase64 ||
+        (resolvedPriorFile ? await readFileAsBase64(resolvedPriorFile) : null)
 
       setProcessingStep('Sending to Claude for analysis...')
 
@@ -446,16 +614,13 @@ export default function DocumentReview() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           clientName,
-          currentFiles: currentFiles.map((file, i) => ({ name: file.name, base64: currentBase64List[i] })),
-          priorFile: priorFile ? { name: priorFile.name, base64: priorBase64 } : null,
+          currentFiles: resolvedCurrentFiles.map((f, i) => ({ name: f.name, base64: currentBase64List[i] })),
+          priorFile: resolvedPriorFile ? { name: resolvedPriorFile.name, base64: priorBase64 } : null,
         }),
       })
 
       const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || `API error ${response.status}`)
-      }
+      if (!response.ok) throw new Error(data.error || `API error ${response.status}`)
 
       setProcessingStep('Organizing extraction results...')
       setSections(parseMarkdownSections(data.text))
@@ -468,11 +633,33 @@ export default function DocumentReview() {
     }
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     const now = new Date()
     setConfirmedAt(now)
     setPhase('confirmed')
     logToAirtable({ clientName, files: currentFiles, priorFile, confirmedAt: now })
+
+    const formTypes = extractFormTypes(sections)
+    if (formTypes.length > 0 && clientName.trim()) {
+      try {
+        setChecklistStatus({ type: 'loading', msg: 'Updating client checklist...' })
+        const res = await fetch('/api/checklist?action=detect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientName: clientName.trim(), formTypes }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || `API error ${res.status}`)
+        const msg = data.warn
+          ? data.warn
+          : data.updated === 0
+            ? 'Checklist already up to date'
+            : `✓ ${data.updated} item${data.updated !== 1 ? 's' : ''} marked Detected in Client Dashboard`
+        setChecklistStatus({ type: data.warn ? 'warn' : 'success', msg })
+      } catch (e) {
+        setChecklistStatus({ type: 'error', msg: 'Checklist update failed: ' + e.message })
+      }
+    }
   }
 
   async function handleSendToSheets() {
@@ -482,6 +669,7 @@ export default function DocumentReview() {
         taxYear,
         sections,
         onStatus: (type, msg) => setSheetsStatus({ type, msg }),
+        existingToken: driveTokenRef.current,
       })
     } catch (err) {
       setSheetsStatus({ type: 'error', msg: err.message })
@@ -514,6 +702,9 @@ export default function DocumentReview() {
     setSheetsStatus(null)
     setChecklistStatus(null)
     setTaxYear('2025')
+    setDriveFolderUrl('')
+    setPriorFolderFound(null)
+    driveTokenRef.current = null
   }
 
   const hasPriorYear = sections.some(s => s.hasPriorYear)
@@ -580,26 +771,85 @@ export default function DocumentReview() {
 
           <Divider />
 
-          <Section label="Current Year Documents">
-            <FileDropZone
-              label="Upload PDFs (drag & drop or click)"
-              multiple
-              files={currentFiles}
-              onFiles={setCurrentFiles}
-            />
+          {/* Source mode toggle */}
+          <Section label="Document Source">
+            <div style={{ display: 'flex', gap: 0, borderRadius: 7, overflow: 'hidden', border: '1px solid rgba(247,244,239,0.15)' }}>
+              {[{ id: false, label: 'Upload Files' }, { id: true, label: 'Google Drive' }].map(({ id, label }) => (
+                <button
+                  key={label}
+                  onClick={() => { setDriveMode(id); setDriveFolderUrl(''); setCurrentFiles([]); setPriorFile(null); setPriorFolderFound(null) }}
+                  style={{
+                    flex: 1, padding: '8px 4px', border: 'none', textAlign: 'center',
+                    background: driveMode === id ? 'rgba(196,114,42,0.2)' : 'transparent',
+                    color: driveMode === id ? '#e8a96a' : '#8a8577',
+                    fontFamily: 'sans-serif', fontSize: 12, fontWeight: driveMode === id ? 600 : 400,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </Section>
 
           <Divider />
 
-          <Section label="Prior Year Return (Optional)">
-            <FileDropZone
-              label="Upload prior year return"
-              multiple={false}
-              files={priorFile ? [priorFile] : []}
-              onFiles={files => setPriorFile(files[0] || null)}
-              muted
-            />
-          </Section>
+          {driveMode ? (
+            <Section label="Drive Folder URL">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <TInput
+                  value={driveFolderUrl}
+                  onChange={e => setDriveFolderUrl(e.target.value)}
+                  placeholder="drive.google.com/drive/folders/..."
+                />
+                <div style={{ fontSize: 11, color: '#8a8577', fontFamily: 'sans-serif', lineHeight: 1.5 }}>
+                  Paste the client's <strong style={{ color: '#e8a96a' }}>{taxYear}</strong> folder link. Client name and prior year return will be auto-detected.
+                </div>
+                {priorFolderFound === true && (
+                  <div style={{ fontSize: 11, color: '#6abf7a', fontFamily: 'sans-serif' }}>
+                    ✓ Prior year ({parseInt(taxYear) - 1}) folder found
+                  </div>
+                )}
+                {priorFolderFound === false && (
+                  <>
+                    <div style={{ fontSize: 11, color: '#e8a96a', fontFamily: 'sans-serif' }}>
+                      ⚠ No {parseInt(taxYear) - 1} folder found — upload manually:
+                    </div>
+                    <FileDropZone
+                      label="Upload prior year return"
+                      multiple={false}
+                      files={priorFile ? [priorFile] : []}
+                      onFiles={files => setPriorFile(files[0] || null)}
+                      muted
+                    />
+                  </>
+                )}
+              </div>
+            </Section>
+          ) : (
+            <>
+              <Section label="Current Year Documents">
+                <FileDropZone
+                  label="Upload PDFs (drag & drop or click)"
+                  multiple
+                  files={currentFiles}
+                  onFiles={setCurrentFiles}
+                />
+              </Section>
+
+              <Divider />
+
+              <Section label="Prior Year Return (Optional)">
+                <FileDropZone
+                  label="Upload prior year return"
+                  multiple={false}
+                  files={priorFile ? [priorFile] : []}
+                  onFiles={files => setPriorFile(files[0] || null)}
+                  muted
+                />
+              </Section>
+            </>
+          )}
 
           <Divider />
 

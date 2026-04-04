@@ -230,6 +230,41 @@ function clientColor(client) {
   return '#c0392b'
 }
 
+function buildFollowUpEmail(client) {
+  const firstName = client.name.includes(',')
+    ? client.name.split(',')[1].trim().split(' ')[0]
+    : client.name.split(' ')[0]
+
+  const missing = client.items.filter(i => i.status === 'Not Started')
+  const grouped = {}
+  CATEGORIES.forEach(cat => { grouped[cat] = [] })
+  missing.forEach(item => { if (grouped[item.category] !== undefined) grouped[item.category].push(item.item) })
+  const catsWithItems = CATEGORIES.filter(cat => grouped[cat].length > 0)
+
+  if (catsWithItems.length === 0) {
+    return {
+      subject: `All Documents Received — ${client.name}`,
+      body: `Hi ${firstName},\n\nGreat news — we have everything we need to complete your ${client.returnType.toLowerCase()} tax return. I'll be in touch soon once it's ready for your review!\n\nWarmly,\nHilda Gonzalez, CPA\nEnlightenment Financial Services`,
+    }
+  }
+
+  const docBlock = catsWithItems.map(cat =>
+    `${cat}:\n` + grouped[cat].map(item => `  • ${item}`).join('\n')
+  ).join('\n\n')
+
+  return {
+    subject: `Documents Still Needed — ${client.returnType} Tax Return`,
+    body:
+      `Hi ${firstName},\n\n` +
+      `I hope you're doing well! I wanted to follow up on a few items I still need to complete your ${client.returnType.toLowerCase()} tax return.\n\n` +
+      `Here's what I'm missing:\n\n` +
+      docBlock + '\n\n' +
+      `If any of these don't apply to your situation, just reply and let me know — I'll mark them as not applicable right away.\n\n` +
+      `Once I have everything, I'll get your return finalized as quickly as possible. Don't hesitate to reach out with any questions!\n\n` +
+      `Warmly,\nHilda Gonzalez, CPA\nEnlightenment Financial Services`,
+  }
+}
+
 function buildTemplateRows(clientName, returnType) {
   const rows = []
   for (const category of CATEGORIES) {
@@ -259,6 +294,8 @@ export default function ClientDocumentDashboard() {
   const [creating, setCreating] = useState(false)
 
   const [savingId, setSavingId] = useState(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailCopied, setEmailCopied] = useState(false)
 
   async function fetchClients() {
     setLoading(true)
@@ -439,18 +476,31 @@ export default function ClientDocumentDashboard() {
                       <span> · {total - verified - detected - notStarted} N/A</span>
                     </div>
                   </div>
-                  <button
-                    disabled
-                    title="Coming in Phase 2"
-                    style={{
-                      padding: '8px 16px', background: 'transparent',
-                      border: '1px solid #d4cfc6', borderRadius: 6,
-                      fontFamily: 'sans-serif', fontSize: 13, color: '#c8c3bb',
-                      cursor: 'not-allowed',
-                    }}
-                  >
-                    Scan Drive
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => { setEmailCopied(false); setShowEmailModal(true) }}
+                      style={{
+                        padding: '8px 16px', background: 'transparent',
+                        border: '1px solid #c4722a', borderRadius: 6,
+                        fontFamily: 'sans-serif', fontSize: 13, color: '#c4722a',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Draft Follow-Up Email
+                    </button>
+                    <button
+                      disabled
+                      title="Coming in Phase 2"
+                      style={{
+                        padding: '8px 16px', background: 'transparent',
+                        border: '1px solid #d4cfc6', borderRadius: 6,
+                        fontFamily: 'sans-serif', fontSize: 13, color: '#c8c3bb',
+                        cursor: 'not-allowed',
+                      }}
+                    >
+                      Scan Drive
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -488,6 +538,86 @@ export default function ClientDocumentDashboard() {
           })()}
         </div>
       </div>
+
+      {/* FOLLOW-UP EMAIL MODAL */}
+      {showEmailModal && selectedClient && (() => {
+        const email = buildFollowUpEmail(selectedClient)
+        const notStartedCount = selectedClient.items.filter(i => i.status === 'Not Started').length
+        function copyEmail() {
+          navigator.clipboard.writeText('Subject: ' + email.subject + '\n\n' + email.body).then(() => {
+            setEmailCopied(true)
+            setTimeout(() => setEmailCopied(false), 2500)
+          })
+        }
+        return (
+          <div
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(26,26,46,0.75)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
+            }}
+            onClick={e => { if (e.target === e.currentTarget) setShowEmailModal(false) }}
+          >
+            <div style={{
+              background: '#1a1a2e', borderRadius: 12,
+              width: 600, maxWidth: 'calc(100vw - 32px)',
+              maxHeight: 'calc(100vh - 48px)',
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '0 8px 48px rgba(26,26,46,0.5)',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                padding: '18px 24px',
+                borderBottom: '1px solid rgba(247,244,239,0.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <div>
+                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 16, color: '#f7f4ef' }}>Follow-Up Email Draft</div>
+                  <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: '#8a8577', marginTop: 3 }}>
+                    {selectedClient.name} · {notStartedCount > 0 ? `${notStartedCount} item${notStartedCount !== 1 ? 's' : ''} not started` : 'All items complete'}
+                  </div>
+                </div>
+                <button onClick={() => setShowEmailModal(false)} style={{ background: 'none', border: 'none', color: '#8a8577', cursor: 'pointer', fontSize: 18 }}>✕</button>
+              </div>
+              <div style={{
+                padding: '12px 24px',
+                borderBottom: '1px solid rgba(247,244,239,0.06)',
+                background: 'rgba(247,244,239,0.03)',
+                display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <span style={{ fontFamily: 'sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a8577', minWidth: 52 }}>Subject</span>
+                <span style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#e8a96a', fontWeight: 500 }}>{email.subject}</span>
+              </div>
+              <div style={{
+                flex: 1, overflowY: 'auto', padding: '20px 24px',
+                fontFamily: 'sans-serif', fontSize: 13, lineHeight: 1.85,
+                color: '#c8c3bb', whiteSpace: 'pre-wrap',
+              }}>
+                {email.body}
+              </div>
+              <div style={{
+                padding: '14px 24px',
+                borderTop: '1px solid rgba(247,244,239,0.08)',
+                display: 'flex', justifyContent: 'flex-end', gap: 10,
+              }}>
+                <button onClick={() => setShowEmailModal(false)} style={{
+                  padding: '8px 16px', background: 'transparent',
+                  border: '1px solid rgba(247,244,239,0.18)', borderRadius: 6,
+                  fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577', cursor: 'pointer',
+                }}>Close</button>
+                <button onClick={copyEmail} style={{
+                  padding: '8px 20px',
+                  background: emailCopied ? '#3d7a5e' : '#c4722a',
+                  border: 'none', borderRadius: 6,
+                  fontFamily: 'sans-serif', fontSize: 13, fontWeight: 600,
+                  color: 'white', cursor: 'pointer', transition: 'background 0.2s',
+                }}>
+                  {emailCopied ? '✓ Copied!' : 'Copy Email'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ADD CLIENT MODAL */}
       {showModal && (

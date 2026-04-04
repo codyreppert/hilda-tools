@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import ExtensionEmailGenerator from './tools/ExtensionEmailGenerator.jsx'
+import DocumentReview from './tools/DocumentReview.jsx'
 import ClientDocumentDashboard from './tools/ClientDocumentDashboard.jsx'
 
 function Nav() {
@@ -7,6 +8,7 @@ function Nav() {
 
   const tools = [
     { path: '/extension-email', label: 'Extension Notices' },
+    { path: '/document-review', label: 'Document Review' },
     { path: '/client-dashboard', label: 'Client Dashboard' },
   ]
 
@@ -75,6 +77,12 @@ function Home() {
           desc="Generate personalized extension deadline emails for clients in seconds."
         />
         <ToolCard
+          to="/document-review"
+          icon="📋"
+          title="Document Extraction & Review"
+          desc="Upload client PDFs and extract all tax figures into an organized working paper."
+        />
+        <ToolCard
           to="/client-dashboard"
           icon="📂"
           title="Client Document Dashboard"
@@ -124,6 +132,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/extension-email" element={<ExtensionEmailGenerator />} />
+            <Route path="/document-review" element={<DocumentReview />} />
             <Route path="/client-dashboard" element={<ClientDocumentDashboard />} />
           </Routes>
         </div>

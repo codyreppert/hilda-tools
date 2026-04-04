@@ -108,8 +108,9 @@ module.exports = async function handler(req, res) {
   }
 }
 
-// Increase body size limit to handle multi-document base64 payloads
+// Increase body size limit and timeout for multi-document base64 payloads
 module.exports.config = {
+  maxDuration: 60,
   api: {
     bodyParser: {
       sizeLimit: '25mb',

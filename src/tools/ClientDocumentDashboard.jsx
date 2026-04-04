@@ -248,7 +248,7 @@ function buildTemplateRows(clientName, returnType) {
 }
 
 export default function ClientDocumentDashboard() {
-  const [clients, setClients] = useState([])
+  const [clients, setClients] = useState(MOCK_CLIENTS)
   const [loading, setLoading] = useState(false)
   const [selectedClient, setSelectedClient] = useState(null)
   const [search, setSearch] = useState('')

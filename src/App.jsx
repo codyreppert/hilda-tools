@@ -8,8 +8,8 @@ function Nav() {
 
   const tools = [
     { path: '/extension-email', label: 'Extension Notices' },
-    { path: '/document-review', label: 'Document Review' },
     { path: '/client-dashboard', label: 'Client Dashboard' },
+    { path: '/document-review', label: 'Document Review' },
   ]
 
   return (
@@ -77,16 +77,16 @@ function Home() {
           desc="Generate personalized extension deadline emails for clients in seconds."
         />
         <ToolCard
-          to="/document-review"
-          icon="📋"
-          title="Document Extraction & Review"
-          desc="Upload client PDFs and extract all tax figures into an organized working paper."
-        />
-        <ToolCard
           to="/client-dashboard"
           icon="📂"
           title="Client Document Dashboard"
           desc="Track document collection status across all clients. AI-powered Drive scanning coming soon."
+        />
+        <ToolCard
+          to="/document-review"
+          icon="📋"
+          title="Document Extraction & Review"
+          desc="Upload client PDFs and extract all tax figures into an organized working paper."
         />
       </div>
     </div>

@@ -138,15 +138,20 @@ export default function ClientDocumentDashboard() {
     e.preventDefault()
     setPwdLoading(true)
     setPwdError(false)
-    const res = await fetch('/api/checklist?action=read', {
-      headers: { 'x-dashboard-password': pwdInput },
-    })
-    setPwdLoading(false)
-    if (res.status === 401) { setPwdError(true); return }
-    const data = await res.json()
-    sessionStorage.setItem('dashboardPwd', pwdInput)
-    setAuthed(true)
-    setClients(data.clients || [])
+    try {
+      const res = await fetch('/api/checklist?action=read', {
+        headers: { 'x-dashboard-password': pwdInput },
+      })
+      setPwdLoading(false)
+      if (!res.ok) { setPwdError(true); return }
+      const data = await res.json()
+      sessionStorage.setItem('dashboardPwd', pwdInput)
+      setAuthed(true)
+      setClients(data.clients || [])
+    } catch {
+      setPwdLoading(false)
+      setPwdError(true)
+    }
   }
 
   useEffect(() => {
@@ -224,7 +229,7 @@ export default function ClientDocumentDashboard() {
               outline: 'none',
             }}
           />
-          {pwdError && <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#e8a96a' }}>Incorrect password</div>}
+          {pwdError && <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#e8a96a' }}>Incorrect password or connection error</div>}
           <button type="submit" disabled={pwdLoading} style={{
             padding: '11px', background: '#c4722a', border: 'none', borderRadius: 8,
             color: 'white', fontFamily: 'sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer',

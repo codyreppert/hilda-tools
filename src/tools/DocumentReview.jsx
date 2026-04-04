@@ -1,5 +1,36 @@
 import { useState, useRef, useEffect } from 'react'
 
+const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
+const SYSTEM_PROMPT = `You are a tax document extraction assistant for a CPA named Hilda Gonzalez.
+
+The user will provide one or more PDF tax documents along with their filenames. Extract every tax figure from every document and organize them into a structured cheat sheet for the CPA to review before preparing the return.
+
+Return ONLY the cheat sheet. No preamble, no closing remarks. Begin immediately with the first ## heading.
+
+Organize output into sections by form type. Use exactly this format:
+
+## [FORM TYPE]
+
+| Field | Current Year | Source Document |
+|-------|-------------|-----------------|
+| [label] | [value] | [filename] |
+
+If a prior year return is provided, use four columns:
+
+## [FORM TYPE]
+
+| Field | Current Year | Prior Year | Source Document |
+|-------|-------------|------------|-----------------|
+| [label] | [value] | [prior value or —] | [filename] |
+
+Rules:
+1. Form type headings must be one of: W-2, 1099-INT, 1099-DIV, 1099-NEC, 1099-MISC, 1099-B, 1099-R, 1099-G, 1099-S, K-1, Schedule C / P&L, Schedule E / Rental, 1098, 1095-A, Other Documents. Add additional types as needed.
+2. End each section with a bold math-check line on its own line (outside the table): **[Section] Total: $X + $Y = $Z** (or **[Section] Total: $X** if only one value)
+3. Format dollar amounts as $X,XXX (no cents unless non-zero). Include % sign for percentages.
+4. If a field value is missing or not found in the document, write: Not found
+5. Include payer or employer name in field labels when available.
+6. Multiple W-2s or same-type 1099s go as separate rows within the same section — do not create duplicate headings.
+7. If prior year is provided, add a ## Year-Over-Year Summary section at the end with a table comparing key totals (total wages, total interest, total dividends, AGI if available, etc.).`
 const AIRTABLE_TOKEN = import.meta.env.VITE_AIRTABLE_TOKEN
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID
 const AIRTABLE_TABLE = 'Document Review'
@@ -613,21 +644,38 @@ export default function DocumentReview() {
 
       setProcessingStep('Sending to Claude for analysis...')
 
-      const response = await fetch('/api/extract', {
+      const contentBlocks = []
+      contentBlocks.push({ type: 'text', text: `Client: ${clientName}\n\nCurrent year documents (${resolvedCurrentFiles.length} file${resolvedCurrentFiles.length !== 1 ? 's' : ''}):` })
+      resolvedCurrentFiles.forEach((f, i) => {
+        contentBlocks.push({ type: 'text', text: `Document ${i + 1}: "${f.name}"` })
+        contentBlocks.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: currentBase64List[i] } })
+      })
+      if (resolvedPriorFile) {
+        contentBlocks.push({ type: 'text', text: `Prior year return: "${resolvedPriorFile.name}"` })
+        contentBlocks.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: priorBase64 } })
+      }
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'x-api-key': ANTHROPIC_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'content-type': 'application/json',
+        },
         body: JSON.stringify({
-          clientName,
-          currentFiles: resolvedCurrentFiles.map((f, i) => ({ name: f.name, base64: currentBase64List[i] })),
-          priorFile: resolvedPriorFile ? { name: resolvedPriorFile.name, base64: priorBase64 } : null,
+          model: 'claude-sonnet-4-6',
+          max_tokens: 4096,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: contentBlocks }],
         }),
       })
 
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || `API error ${response.status}`)
+      if (!response.ok) throw new Error(data.error?.message || `Anthropic API error ${response.status}`)
 
       setProcessingStep('Organizing extraction results...')
-      setSections(parseMarkdownSections(data.text))
+      setSections(parseMarkdownSections(data.content[0].text))
       stopTimers()
       setPhase('result')
     } catch (err) {

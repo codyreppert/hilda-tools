@@ -18,3 +18,5 @@ input, textarea, button, select {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d4cfc6; border-radius: 3px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }

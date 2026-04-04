@@ -1,17 +1,5 @@
 const AIRTABLE_TABLE = 'Client Checklist'
 
-function getEnv(req) {
-  return {
-    token: process.env.VITE_AIRTABLE_TOKEN,
-    baseId: process.env.VITE_AIRTABLE_BASE_ID,
-    password: process.env.DASHBOARD_PASSWORD,
-  }
-}
-
-function unauthorized(res) {
-  res.status(401).json({ error: 'Unauthorized' })
-}
-
 async function fetchAllRecords(token, baseId) {
   const records = []
   let offset = null
@@ -62,26 +50,27 @@ async function batchCreate(token, baseId, records) {
   }
 }
 
-export default async function handler(req, res) {
-  const { token, baseId, password } = getEnv(req)
+module.exports = async function handler(req, res) {
+  const token = process.env.VITE_AIRTABLE_TOKEN
+  const baseId = process.env.VITE_AIRTABLE_BASE_ID
+  const password = process.env.DASHBOARD_PASSWORD
   const reqPassword = req.headers['x-dashboard-password']
 
-  if (!reqPassword || reqPassword !== password) return unauthorized(res)
+  if (!reqPassword || reqPassword !== password) return res.status(401).json({ error: 'Unauthorized' })
   if (!token || !baseId) return res.status(500).json({ error: 'Missing Airtable config' })
 
   const action = req.query.action
 
-  if (action === 'read') {
+  if (req.method === 'GET' && action === 'read') {
     try {
       const records = await fetchAllRecords(token, baseId)
-      const clients = groupByClient(records)
-      return res.json({ clients })
+      return res.json({ clients: groupByClient(records) })
     } catch (e) {
       return res.status(500).json({ error: e.message })
     }
   }
 
-  if (action === 'update') {
+  if (req.method === 'POST' && action === 'update') {
     const { recordId, status, notes } = req.body
     if (!recordId) return res.status(400).json({ error: 'recordId required' })
     const fields = {}
@@ -101,7 +90,7 @@ export default async function handler(req, res) {
     }
   }
 
-  if (action === 'create') {
+  if (req.method === 'POST' && action === 'create') {
     const { records } = req.body
     if (!records?.length) return res.status(400).json({ error: 'records required' })
     try {

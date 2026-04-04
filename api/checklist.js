@@ -56,7 +56,15 @@ module.exports = async function handler(req, res) {
   const password = process.env.DASHBOARD_PASSWORD
   const reqPassword = req.headers['x-dashboard-password']
 
-  if (!reqPassword || reqPassword !== password) return res.status(401).json({ error: 'Unauthorized' })
+  if (!reqPassword || reqPassword !== password) return res.status(401).json({
+    error: 'Unauthorized',
+    debug: {
+      envVarSet: !!password,
+      envVarLength: password ? password.length : 0,
+      headerReceived: !!reqPassword,
+      headerLength: reqPassword ? reqPassword.length : 0,
+    }
+  })
   if (!token || !baseId) return res.status(500).json({ error: 'Missing Airtable config' })
 
   const action = req.query.action

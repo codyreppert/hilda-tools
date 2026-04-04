@@ -332,10 +332,10 @@ export default function ClientDocumentDashboard() {
         <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Client Document Dashboard</div>
       </div>
 
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div className="tool-two-col">
 
         {/* LEFT PANEL */}
-        <div style={{ background: '#1a1a2e', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', boxSizing: 'border-box', borderRight: '1px solid rgba(247,244,239,0.06)' }}>
+        <div className="tool-sidebar" style={{ background: '#1a1a2e', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', boxSizing: 'border-box', borderRight: '1px solid rgba(247,244,239,0.06)' }}>
           <div style={{ padding: '16px 16px 8px' }}>
             <input
               value={search}
@@ -416,7 +416,7 @@ export default function ClientDocumentDashboard() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div style={{ flex: 1, background: '#f7f4ef', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
+        <div className="tool-content" style={{ flex: 1, background: '#f7f4ef', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
           {!selectedClient && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300, gap: 10, opacity: 0.4 }}>
               <div style={{ fontSize: 36 }}>📋</div>
@@ -427,8 +427,8 @@ export default function ClientDocumentDashboard() {
           {selectedClient && (() => {
             const { total, verified, detected, notStarted } = clientProgress(selectedClient)
             return (
-              <div style={{ padding: '28px 28px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+              <div className="dashboard-right" style={{ padding: '28px 28px' }}>
+                <div className="client-header-row" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#1a1a2e', marginBottom: 4 }}>{selectedClient.name}</div>
                     <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577' }}>
@@ -497,7 +497,7 @@ export default function ClientDocumentDashboard() {
         }}
           onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}
         >
-          <form onSubmit={handleAddClient} style={{
+          <form onSubmit={handleAddClient} className="modal-form" style={{
             background: 'white', borderRadius: 12, padding: '28px 28px',
             width: 360, display: 'flex', flexDirection: 'column', gap: 16,
             boxShadow: '0 8px 40px rgba(26,26,46,0.18)',
@@ -560,7 +560,7 @@ function ItemRow({ item, saving, onStatusChange, onNotesBlur }) {
   useEffect(() => { setNotes(item.notes) }, [item.notes])
 
   return (
-    <div style={{
+    <div className="item-row-grid" style={{
       display: 'grid', gridTemplateColumns: '1fr 140px',
       gap: 8, padding: '8px 10px', borderRadius: 6,
       background: STATUS_BG[item.status] || 'transparent',

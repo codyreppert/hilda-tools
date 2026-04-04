@@ -218,10 +218,10 @@ export default function ExtensionEmailGenerator() {
         <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Document Follow-Up Generator</div>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, flexWrap: 'wrap' }}>
+      <div className="tool-two-col" style={{ flexWrap: 'wrap' }}>
 
         {/* FORM */}
-        <div style={{ background: '#1a1a2e', padding: '24px 20px', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
+        <div className="tool-sidebar" style={{ background: '#1a1a2e', padding: '24px 20px', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
 
           <Section label="Your Info">
             <Field label="Your Name"><TInput value={cpaName} onChange={e => setCpaName(e.target.value)} /></Field>
@@ -321,7 +321,7 @@ export default function ExtensionEmailGenerator() {
         </div>
 
         {/* OUTPUT */}
-        <div style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280 }}>
+        <div className="tool-content" style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280 }}>
           <div style={{ fontSize: 22, fontWeight: 400, color: '#1a1a2e' }}>
             Generated <span style={{ color: '#c4722a' }}>Notice</span>
           </div>
@@ -336,7 +336,7 @@ export default function ExtensionEmailGenerator() {
           {result && (
             <>
               <div style={{ background: 'white', border: '1px solid #d4cfc6', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 12px rgba(26,26,46,0.06)' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #d4cfc6', background: '#ede9e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="result-header-row" style={{ padding: '14px 20px', borderBottom: '1px solid #d4cfc6', background: '#ede9e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontFamily: 'Georgia, serif', fontSize: 15, fontWeight: 600, color: '#1a1a2e' }}>{clientName}</div>
                     <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: '#8a8577', marginTop: 2 }}>

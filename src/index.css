@@ -20,3 +20,102 @@ input, textarea, button, select {
 ::-webkit-scrollbar-thumb { background: #d4cfc6; border-radius: 3px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+
+/* Nav: desktop links visible, hamburger hidden */
+.nav-desktop-links {
+  display: flex;
+  align-items: center;
+}
+.nav-hamburger {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #f7f4ef;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.nav-mobile-menu {
+  display: none;
+  background: #1a1a2e;
+  border-top: 1px solid rgba(247,244,239,0.08);
+}
+
+/* Two-column tool layouts */
+.tool-two-col {
+  display: flex;
+  flex: 1;
+}
+.tool-sidebar {
+  /* desktop values set inline; mobile overrides below */
+}
+.tool-content {
+  /* desktop values set inline; mobile overrides below */
+}
+
+/* Document table wrapper — scrollable horizontally */
+.table-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll-wrap table {
+  min-width: 480px;
+}
+
+@media (max-width: 680px) {
+  /* Nav: show hamburger, hide desktop links */
+  .nav-desktop-links { display: none !important; }
+  .nav-hamburger     { display: block !important; }
+  .nav-mobile-menu   { display: block !important; }
+
+  /* Home page */
+  .home-pad { padding: 24px 16px !important; }
+  .home-tool-grid { grid-template-columns: 1fr !important; }
+
+  /* Stack tool sidebars above content */
+  .tool-two-col { flex-direction: column; }
+
+  .tool-sidebar {
+    width: 100% !important;
+    min-width: unset !important;
+    max-height: none !important;
+    border-right: none !important;
+  }
+
+  .tool-content {
+    max-height: none !important;
+    min-width: unset !important;
+    padding: 20px 16px !important;
+  }
+
+  /* Client dashboard right panel */
+  .dashboard-right { padding: 20px 16px !important; }
+
+  /* ItemRow: stack select below text */
+  .item-row-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Add Client modal */
+  .modal-form {
+    width: calc(100vw - 32px) !important;
+    padding: 20px 16px !important;
+  }
+
+  /* Dashboard client header */
+  .client-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  /* Extension email result header */
+  .result-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}

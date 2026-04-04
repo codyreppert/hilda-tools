@@ -101,11 +101,6 @@ function buildTemplateRows(clientName, returnType) {
 }
 
 export default function ClientDocumentDashboard() {
-  const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('dashboardPwd'))
-  const [pwdInput, setPwdInput] = useState('')
-  const [pwdError, setPwdError] = useState(false)
-  const [pwdLoading, setPwdLoading] = useState(false)
-
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedClient, setSelectedClient] = useState(null)
@@ -118,15 +113,10 @@ export default function ClientDocumentDashboard() {
 
   const [savingId, setSavingId] = useState(null)
 
-  const pwd = () => sessionStorage.getItem('dashboardPwd') || ''
-
-  async function fetchClients(password) {
+  async function fetchClients() {
     setLoading(true)
     try {
-      const res = await fetch('/api/checklist?action=read', {
-        headers: { 'Authorization': `Bearer ${password}` },
-      })
-      if (res.status === 401) { sessionStorage.removeItem('dashboardPwd'); setAuthed(false); return }
+      const res = await fetch('/api/checklist?action=read')
       const data = await res.json()
       setClients(data.clients || [])
     } finally {
@@ -134,29 +124,7 @@ export default function ClientDocumentDashboard() {
     }
   }
 
-  async function handleLogin(e) {
-    e.preventDefault()
-    setPwdLoading(true)
-    setPwdError(false)
-    try {
-      const res = await fetch('/api/checklist?action=read', {
-        headers: { 'Authorization': `Bearer ${pwdInput}` },
-      })
-      setPwdLoading(false)
-      if (!res.ok) { setPwdError(true); return }
-      const data = await res.json()
-      sessionStorage.setItem('dashboardPwd', pwdInput)
-      setAuthed(true)
-      setClients(data.clients || [])
-    } catch {
-      setPwdLoading(false)
-      setPwdError(true)
-    }
-  }
-
-  useEffect(() => {
-    if (authed) fetchClients(pwd())
-  }, [authed])
+  useEffect(() => { fetchClients() }, [])
 
   async function updateItem(clientName, itemId, field, value) {
     setSavingId(itemId)
@@ -175,7 +143,7 @@ export default function ClientDocumentDashboard() {
     if (field === 'notes') body.notes = value
     await fetch('/api/checklist?action=update', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${pwd()}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
     setSavingId(null)
@@ -188,10 +156,10 @@ export default function ClientDocumentDashboard() {
     const rows = buildTemplateRows(newName.trim(), newType)
     await fetch('/api/checklist?action=create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${pwd()}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ records: rows }),
     })
-    await fetchClients(pwd())
+    await fetchClients()
     const fresh = clients.find(c => c.name === newName.trim())
     setSelectedClient(fresh || null)
     setCreating(false)
@@ -208,38 +176,6 @@ export default function ClientDocumentDashboard() {
   }, [clients])
 
   const filtered = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
-
-  if (!authed) {
-    return (
-      <div style={{ minHeight: 'calc(100vh - 50px)', background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16, width: 300 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8a96a', fontFamily: 'sans-serif' }}>Tool 02</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#f7f4ef', marginBottom: 4 }}>Client Dashboard</div>
-          <input
-            type="password"
-            value={pwdInput}
-            onChange={e => { setPwdInput(e.target.value); setPwdError(false) }}
-            placeholder="Password"
-            autoFocus
-            style={{
-              fontFamily: 'sans-serif', fontSize: 14,
-              background: 'rgba(247,244,239,0.07)',
-              border: '1px solid ' + (pwdError ? '#c4722a' : 'rgba(247,244,239,0.18)'),
-              borderRadius: 6, padding: '10px 12px', color: '#f7f4ef',
-              outline: 'none',
-            }}
-          />
-          {pwdError && <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#e8a96a' }}>Incorrect password or connection error</div>}
-          <button type="submit" disabled={pwdLoading} style={{
-            padding: '11px', background: '#c4722a', border: 'none', borderRadius: 8,
-            color: 'white', fontFamily: 'sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-          }}>
-            {pwdLoading ? 'Checking…' : 'Enter'}
-          </button>
-        </form>
-      </div>
-    )
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 50px)' }}>

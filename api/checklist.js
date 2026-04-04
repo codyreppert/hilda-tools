@@ -53,11 +53,7 @@ async function batchCreate(token, baseId, records) {
 module.exports = async function handler(req, res) {
   const token = process.env.VITE_AIRTABLE_TOKEN
   const baseId = process.env.VITE_AIRTABLE_BASE_ID
-  const password = process.env.DASHBOARD_PASSWORD
-  const authHeader = req.headers['authorization'] || ''
-  const reqPassword = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
 
-  if (!reqPassword || reqPassword !== password) return res.status(401).json({ error: 'Unauthorized' })
   if (!token || !baseId) return res.status(500).json({ error: 'Missing Airtable config' })
 
   const action = req.query.action
@@ -72,7 +68,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'POST' && action === 'update') {
-    const { recordId, status, notes } = req.body
+    const { recordId, status, notes } = req.body || {}
     if (!recordId) return res.status(400).json({ error: 'recordId required' })
     const fields = {}
     if (status !== undefined) fields['Status'] = status
@@ -92,7 +88,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'POST' && action === 'create') {
-    const { records } = req.body
+    const { records } = req.body || {}
     if (!records?.length) return res.status(400).json({ error: 'records required' })
     try {
       await batchCreate(token, baseId, records)

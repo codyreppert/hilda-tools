@@ -8,10 +8,11 @@ function Nav() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
+  const showDashboard = import.meta.env.VITE_SHOW_DASHBOARD === 'true'
   const tools = [
     { path: '/extension-email', label: 'Extension Notices' },
     { path: '/document-review', label: 'Document Review' },
-    // { path: '/client-dashboard', label: 'Client Dashboard' },
+    ...(showDashboard ? [{ path: '/client-dashboard', label: 'Client Dashboard' }] : []),
   ]
 
   function closeMenu() { setMenuOpen(false) }
@@ -99,6 +100,7 @@ function Nav() {
 }
 
 function Home() {
+  const showDashboard = import.meta.env.VITE_SHOW_DASHBOARD === 'true'
   return (
     <div className="home-pad" style={{ padding: '52px 40px', maxWidth: 920 }}>
       <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8a96a', fontFamily: 'sans-serif', marginBottom: 10 }}>
@@ -127,6 +129,16 @@ function Home() {
           desc="Upload client PDFs and extract every tax figure into a clean, organized working paper. Flags contribution limit issues and year-over-year variances automatically."
           bullets={['AI-powered PDF extraction', 'Contribution limit checks', 'Export to Google Sheets']}
         />
+        {showDashboard && (
+          <ToolCard
+            to="/client-dashboard"
+            number="03"
+            icon="🗂"
+            title="Client Document Dashboard"
+            desc="Track every client's document checklist in one view. See what's verified, detected, and still missing — then draft a follow-up email in one click."
+            bullets={['Live checklist per client', 'Auto-updates from extractions', 'Draft follow-up emails']}
+          />
+        )}
       </div>
     </div>
   )

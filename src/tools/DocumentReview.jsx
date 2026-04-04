@@ -545,17 +545,6 @@ export default function DocumentReview() {
     setApiError(null)
     startTimers()
 
-    if (MOCK_MODE) {
-      setProcessingStep('Reading PDF files...')
-      await new Promise(r => setTimeout(r, 2500))
-      setProcessingStep('Organizing extraction results...')
-      await new Promise(r => setTimeout(r, 500))
-      setSections(parseMarkdownSections(MOCK_RESPONSE))
-      stopTimers()
-      setPhase('result')
-      return
-    }
-
     let resolvedCurrentFiles = currentFiles
     let resolvedCurrentBase64List = null
     let resolvedPriorFile = priorFile
@@ -578,19 +567,23 @@ export default function DocumentReview() {
           throw new Error('No PDF files found in that folder.')
         }
 
-        setProcessingStep(`Downloading ${currentDriveFiles.length} document${currentDriveFiles.length !== 1 ? 's' : ''}...`)
-        resolvedCurrentBase64List = await Promise.all(
-          currentDriveFiles.map(f => downloadDriveFileAsBase64(f.id, token))
-        )
-        resolvedCurrentFiles = currentDriveFiles
-
         if (priorDriveFiles.length > 0) {
           setPriorFolderFound(true)
           const autoSelected = priorDriveFiles.find(f => /1040|return|tax/i.test(f.name)) || priorDriveFiles[0]
-          resolvedPriorBase64 = await downloadDriveFileAsBase64(autoSelected.id, token)
           resolvedPriorFile = autoSelected
+          if (!MOCK_MODE) {
+            setProcessingStep(`Downloading ${currentDriveFiles.length} document${currentDriveFiles.length !== 1 ? 's' : ''}...`)
+            resolvedCurrentBase64List = await Promise.all(currentDriveFiles.map(f => downloadDriveFileAsBase64(f.id, token)))
+            resolvedCurrentFiles = currentDriveFiles
+            resolvedPriorBase64 = await downloadDriveFileAsBase64(autoSelected.id, token)
+          }
         } else {
           setPriorFolderFound(false)
+          if (!MOCK_MODE) {
+            setProcessingStep(`Downloading ${currentDriveFiles.length} document${currentDriveFiles.length !== 1 ? 's' : ''}...`)
+            resolvedCurrentBase64List = await Promise.all(currentDriveFiles.map(f => downloadDriveFileAsBase64(f.id, token)))
+            resolvedCurrentFiles = currentDriveFiles
+          }
         }
       } catch (err) {
         stopTimers()
@@ -598,6 +591,17 @@ export default function DocumentReview() {
         setPhase('empty')
         return
       }
+    }
+
+    if (MOCK_MODE) {
+      setProcessingStep('Analyzing documents...')
+      await new Promise(r => setTimeout(r, 2000))
+      setProcessingStep('Organizing extraction results...')
+      await new Promise(r => setTimeout(r, 500))
+      setSections(parseMarkdownSections(MOCK_RESPONSE))
+      stopTimers()
+      setPhase('result')
+      return
     }
 
     try {

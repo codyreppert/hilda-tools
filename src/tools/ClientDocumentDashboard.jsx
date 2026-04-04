@@ -124,7 +124,7 @@ export default function ClientDocumentDashboard() {
     setLoading(true)
     try {
       const res = await fetch('/api/checklist?action=read', {
-        headers: { 'x-dashboard-password': password },
+        headers: { 'Authorization': `Bearer ${password}` },
       })
       if (res.status === 401) { sessionStorage.removeItem('dashboardPwd'); setAuthed(false); return }
       const data = await res.json()
@@ -140,7 +140,7 @@ export default function ClientDocumentDashboard() {
     setPwdError(false)
     try {
       const res = await fetch('/api/checklist?action=read', {
-        headers: { 'x-dashboard-password': pwdInput },
+        headers: { 'Authorization': `Bearer ${pwdInput}` },
       })
       setPwdLoading(false)
       if (!res.ok) { setPwdError(true); return }
@@ -175,7 +175,7 @@ export default function ClientDocumentDashboard() {
     if (field === 'notes') body.notes = value
     await fetch('/api/checklist?action=update', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pwd() },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${pwd()}` },
       body: JSON.stringify(body),
     })
     setSavingId(null)
@@ -188,7 +188,7 @@ export default function ClientDocumentDashboard() {
     const rows = buildTemplateRows(newName.trim(), newType)
     await fetch('/api/checklist?action=create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pwd() },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${pwd()}` },
       body: JSON.stringify({ records: rows }),
     })
     await fetchClients(pwd())

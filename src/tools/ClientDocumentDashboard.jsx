@@ -283,7 +283,12 @@ function buildTemplateRows(clientName, returnType) {
 }
 
 export default function ClientDocumentDashboard() {
-  const [clients, setClients] = useState(MOCK_CLIENTS)
+  const [pwd, setPwd] = useState(() => sessionStorage.getItem('dashboardPwd') || '')
+  const [pwdInput, setPwdInput] = useState('')
+  const [pwdError, setPwdError] = useState('')
+  const [pwdLoading, setPwdLoading] = useState(false)
+
+  const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedClient, setSelectedClient] = useState(null)
   const [search, setSearch] = useState('')
@@ -297,19 +302,20 @@ export default function ClientDocumentDashboard() {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [emailCopied, setEmailCopied] = useState(false)
 
-  async function fetchClients() {
+  async function fetchClients(password) {
     setLoading(true)
     try {
-      const res = await fetch('/api/checklist?action=read')
+      const res = await fetch('/api/checklist?action=read', {
+        headers: { 'x-dashboard-password': password || pwd },
+      })
       const data = await res.json()
-      const real = data.clients || []
-      setClients(real.length > 0 ? real : MOCK_CLIENTS)
+      setClients(data.clients || [])
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { fetchClients() }, [])
+  useEffect(() => { if (pwd) fetchClients(pwd) }, [pwd])
 
   async function updateItem(clientName, itemId, field, value) {
     setSavingId(itemId)
@@ -328,7 +334,7 @@ export default function ClientDocumentDashboard() {
     if (field === 'notes') body.notes = value
     await fetch('/api/checklist?action=update', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pwd },
       body: JSON.stringify(body),
     })
     setSavingId(null)
@@ -341,7 +347,7 @@ export default function ClientDocumentDashboard() {
     const rows = buildTemplateRows(newName.trim(), newType)
     await fetch('/api/checklist?action=create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pwd },
       body: JSON.stringify({ records: rows }),
     })
     await fetchClients()
@@ -360,7 +366,83 @@ export default function ClientDocumentDashboard() {
     }
   }, [clients])
 
+  async function handlePasswordSubmit(e) {
+    e.preventDefault()
+    if (!pwdInput.trim()) return
+    setPwdLoading(true)
+    setPwdError('')
+    try {
+      const res = await fetch('/api/checklist?action=read', {
+        headers: { 'x-dashboard-password': pwdInput },
+      })
+      if (res.status === 401) {
+        setPwdError('Incorrect password. Please try again.')
+        setPwdLoading(false)
+        return
+      }
+      const data = await res.json()
+      sessionStorage.setItem('dashboardPwd', pwdInput)
+      setPwd(pwdInput)
+      setClients(data.clients || [])
+    } catch {
+      setPwdError('Connection error. Please try again.')
+    }
+    setPwdLoading(false)
+  }
+
   const filtered = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
+
+  if (!pwd) {
+    return (
+      <div style={{
+        minHeight: 'calc(100vh - 50px)', background: '#1a1a2e',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <form onSubmit={handlePasswordSubmit} style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+          width: 320,
+        }}>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 26, color: '#f7f4ef', fontWeight: 400 }}>
+            Client Dashboard
+          </div>
+          <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577' }}>
+            Enter your password to continue
+          </div>
+          <input
+            type="password"
+            value={pwdInput}
+            onChange={e => { setPwdInput(e.target.value); setPwdError('') }}
+            placeholder="Password"
+            autoFocus
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              fontFamily: 'sans-serif', fontSize: 14,
+              background: 'rgba(247,244,239,0.07)',
+              border: '1px solid ' + (pwdError ? '#c4722a' : 'rgba(247,244,239,0.18)'),
+              borderRadius: 8, padding: '11px 14px', color: '#f7f4ef', outline: 'none',
+            }}
+          />
+          {pwdError && (
+            <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#c4722a', alignSelf: 'flex-start', marginTop: -8 }}>
+              {pwdError}
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={pwdLoading || !pwdInput.trim()}
+            style={{
+              width: '100%', padding: '12px', background: pwdLoading ? '#8a8577' : '#c4722a',
+              border: 'none', borderRadius: 8, color: 'white',
+              fontFamily: 'sans-serif', fontSize: 14, fontWeight: 600,
+              cursor: pwdLoading ? 'default' : 'pointer',
+            }}
+          >
+            {pwdLoading ? 'Verifying…' : 'Enter Dashboard'}
+          </button>
+        </form>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 50px)' }}>

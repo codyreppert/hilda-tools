@@ -67,6 +67,14 @@ async function batchCreate(token, baseId, records) {
 }
 
 module.exports = async function handler(req, res) {
+  const dashPwd = process.env.DASHBOARD_PASSWORD
+  if (dashPwd) {
+    const provided = req.headers['x-dashboard-password']
+    if (!provided || provided !== dashPwd) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+  }
+
   const token = process.env.VITE_AIRTABLE_TOKEN
   const baseId = process.env.VITE_AIRTABLE_BASE_ID
 

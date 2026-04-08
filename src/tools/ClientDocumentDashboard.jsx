@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useDarkMode } from '../App'
 
 function mockItem(id, category, item, status, notes = '', driveFileName = '') {
   return { id, category, item, status, notes, driveFileName, lastScanned: '' }
@@ -283,6 +284,7 @@ function buildTemplateRows(clientName, returnType) {
 }
 
 export default function ClientDocumentDashboard() {
+  const { darkMode } = useDarkMode()
   const [pwd, setPwd] = useState(() => sessionStorage.getItem('dashboardPwd') || '')
   const [pwdInput, setPwdInput] = useState('')
   const [pwdError, setPwdError] = useState('')
@@ -445,8 +447,8 @@ export default function ClientDocumentDashboard() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 50px)' }}>
-      <div style={{ background: '#1a1a2e', padding: '16px 24px', borderBottom: '1px solid rgba(247,244,239,0.06)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 50px)', background: darkMode ? '#0a0a0e' : 'transparent' }}>
+      <div style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', padding: '16px 24px', borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}` }}>
         <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8a96a', fontFamily: 'sans-serif', marginBottom: 3 }}>Tool 02</div>
         <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Client Document Dashboard</div>
       </div>
@@ -454,7 +456,7 @@ export default function ClientDocumentDashboard() {
       <div className="tool-two-col">
 
         {/* LEFT PANEL */}
-        <div className="tool-sidebar" style={{ background: '#1a1a2e', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', boxSizing: 'border-box', borderRight: '1px solid rgba(247,244,239,0.06)' }}>
+        <div className="tool-sidebar" style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', boxSizing: 'border-box', borderRight: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}` }}>
           <div style={{ padding: '16px 16px 8px' }}>
             <input
               value={search}
@@ -463,8 +465,8 @@ export default function ClientDocumentDashboard() {
               style={{
                 width: '100%', boxSizing: 'border-box',
                 fontFamily: 'sans-serif', fontSize: 13,
-                background: 'rgba(247,244,239,0.07)',
-                border: '1px solid rgba(247,244,239,0.14)',
+                background: darkMode ? 'rgba(232,229,224,0.07)' : 'rgba(247,244,239,0.07)',
+                border: `1px solid ${darkMode ? 'rgba(232,229,224,0.14)' : 'rgba(247,244,239,0.14)'}`,
                 borderRadius: 6, padding: '8px 11px', color: '#f7f4ef', outline: 'none',
               }}
             />

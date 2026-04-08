@@ -547,7 +547,7 @@ export default function DocumentReview() {
   const [taxYear, setTaxYear]                 = useState('2025')
   const [sheetsStatus, setSheetsStatus]       = useState(null)
   const [checklistStatus, setChecklistStatus] = useState(null)
-  const [driveMode, setDriveMode]             = useState(false)
+  const [driveMode, setDriveMode]             = useState(true)
   const [driveFolderUrl, setDriveFolderUrl]   = useState('')
   const [priorFolderFound, setPriorFolderFound] = useState(null)
   const [docCount, setDocCount]               = useState(0)
@@ -792,7 +792,7 @@ export default function DocumentReview() {
       {/* Tool header */}
       <div style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', padding: '16px 24px', borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}` }}>
         <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8a96a', fontFamily: 'sans-serif', marginBottom: 3 }}>Tool 03</div>
-        <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Document Extraction & Review</div>
+        <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Document Summary</div>
       </div>
 
       <div className="tool-two-col" style={{ flexWrap: 'wrap', background: darkMode ? '#0a0a0e' : 'transparent' }}>

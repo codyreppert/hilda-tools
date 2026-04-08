@@ -9,6 +9,7 @@ body {
   background: #f7f4ef;
   color: #1a1a2e;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 input, textarea, button, select {
@@ -18,6 +19,11 @@ input, textarea, button, select {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d4cfc6; border-radius: 3px; }
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb { background: #3a3a4e; }
+}
 
 @keyframes spin { to { transform: rotate(360deg); } }
 

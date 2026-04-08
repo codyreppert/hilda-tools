@@ -15,11 +15,12 @@ function Nav() {
   const { darkMode, setDarkMode } = useDarkMode()
 
   const showDashboard = import.meta.env.VITE_SHOW_DASHBOARD === 'true'
+  const showIntake = import.meta.env.VITE_SHOW_INTAKE === 'true'
   const tools = [
     { path: '/extension-email', label: 'Extension Notices' },
     { path: '/document-review', label: 'Document Summary' },
     ...(showDashboard ? [{ path: '/client-dashboard', label: 'Client Dashboard' }] : []),
-    { path: '/intake-review', label: 'Client Intake' },
+    ...(showIntake ? [{ path: '/intake-review', label: 'Client Intake' }] : []),
   ]
 
   function closeMenu() { setMenuOpen(false) }
@@ -132,6 +133,7 @@ function Nav() {
 
 function Home() {
   const showDashboard = import.meta.env.VITE_SHOW_DASHBOARD === 'true'
+  const showIntake = import.meta.env.VITE_SHOW_INTAKE === 'true'
   const { darkMode } = useDarkMode()
 
   return (
@@ -172,14 +174,16 @@ function Home() {
             bullets={['Live checklist per client', 'Auto-updates from extractions', 'Draft follow-up emails']}
           />
         )}
-        <ToolCard
-          to="/intake-review"
-          number="04"
-          icon="🤝"
-          title="Client Intake & Fit Screener"
-          desc="Send prospects a branded intake form. Claude assesses fit, flags complexity, and drafts your response email — ready to review and send."
-          bullets={['AI chat or fill-in-form', 'Internal fit assessment', 'Draft response in one click']}
-        />
+        {showIntake && (
+          <ToolCard
+            to="/intake-review"
+            number="04"
+            icon="🤝"
+            title="Client Intake & Fit Screener"
+            desc="Send prospects a branded intake form. Claude assesses fit, flags complexity, and drafts your response email — ready to review and send."
+            bullets={['AI chat or fill-in-form', 'Internal fit assessment', 'Draft response in one click']}
+          />
+        )}
       </div>
     </div>
   )

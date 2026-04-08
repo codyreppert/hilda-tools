@@ -17,7 +17,7 @@ function Nav() {
   const showDashboard = import.meta.env.VITE_SHOW_DASHBOARD === 'true'
   const tools = [
     { path: '/extension-email', label: 'Extension Notices' },
-    { path: '/document-review', label: 'Document Review' },
+    { path: '/document-review', label: 'Document Summary' },
     ...(showDashboard ? [{ path: '/client-dashboard', label: 'Client Dashboard' }] : []),
     { path: '/intake-review', label: 'Client Intake' },
   ]
@@ -158,7 +158,7 @@ function Home() {
           to="/document-review"
           number="02"
           icon="📋"
-          title="Document Extraction & Review"
+          title="Document Summary"
           desc="Upload client PDFs and extract every tax figure into a clean, organized working paper. Flags contribution limit issues and year-over-year variances automatically."
           bullets={['AI-powered PDF extraction', 'Contribution limit checks', 'Export to Google Sheets']}
         />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDarkMode } from '../App'
 
 const AIRTABLE_TOKEN = import.meta.env.VITE_AIRTABLE_TOKEN
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID
@@ -161,6 +162,7 @@ async function logToAirtable({ cpaName, clientName, tone, returnType, missingDoc
 }
 
 export default function ExtensionEmailGenerator() {
+  const { darkMode } = useDarkMode()
   const [cpaName, setCpaName]           = useState('Hilda Gonzalez, CPA')
   const [firmName, setFirmName]         = useState('Enlightenment Financial Services')
   const [returnType, setReturnType]     = useState('personal')
@@ -213,7 +215,7 @@ export default function ExtensionEmailGenerator() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 50px)' }}>
-      <div style={{ background: '#1a1a2e', padding: '16px 24px', borderBottom: '1px solid rgba(247,244,239,0.06)' }}>
+      <div style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', padding: '16px 24px', borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}` }}>
         <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8a96a', fontFamily: 'sans-serif', marginBottom: 3 }}>Tool 01</div>
         <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Document Follow-Up Generator</div>
       </div>
@@ -221,7 +223,7 @@ export default function ExtensionEmailGenerator() {
       <div className="tool-two-col" style={{ flexWrap: 'wrap' }}>
 
         {/* FORM */}
-        <div className="tool-sidebar" style={{ background: '#1a1a2e', padding: '24px 20px', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
+        <div className="tool-sidebar" style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', padding: '24px 20px', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
 
           <Section label="Your Info">
             <Field label="Your Name"><TInput value={cpaName} onChange={e => setCpaName(e.target.value)} /></Field>
@@ -235,12 +237,12 @@ export default function ExtensionEmailGenerator() {
               {RETURN_TYPES.map(t => (
                 <button key={t.id} onClick={() => switchReturnType(t.id)} style={{
                   flex: 1, padding: '10px 8px', borderRadius: 6, textAlign: 'center',
-                  border: '1px solid ' + (returnType === t.id ? '#c4722a' : 'rgba(247,244,239,0.15)'),
+                  border: '1px solid ' + (returnType === t.id ? '#c4722a' : (darkMode ? 'rgba(232,229,224,0.15)' : 'rgba(247,244,239,0.15)')),
                   background: returnType === t.id ? 'rgba(196,114,42,0.15)' : 'transparent',
                   cursor: 'pointer',
                 }}>
                   <div style={{ color: returnType === t.id ? '#e8a96a' : '#f7f4ef', fontFamily: 'sans-serif', fontSize: 12, fontWeight: 600 }}>{t.label}</div>
-                  <div style={{ color: '#8a8577', fontFamily: 'sans-serif', fontSize: 10, marginTop: 3, lineHeight: 1.4 }}>{t.sublabel}</div>
+                  <div style={{ color: darkMode ? '#a8a39b' : '#8a8577', fontFamily: 'sans-serif', fontSize: 10, marginTop: 3, lineHeight: 1.4 }}>{t.sublabel}</div>
                 </button>
               ))}
             </div>
@@ -264,7 +266,7 @@ export default function ExtensionEmailGenerator() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {docList.map(group => (
                 <div key={group.group}>
-                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a8577', fontFamily: 'sans-serif', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(247,244,239,0.06)' }}>{group.group}</div>
+                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: darkMode ? '#a8a39b' : '#8a8577', fontFamily: 'sans-serif', marginBottom: 8, paddingBottom: 6, borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}` }}>{group.group}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                     {group.items.map(doc => (
                       <label key={doc} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
@@ -274,7 +276,7 @@ export default function ExtensionEmailGenerator() {
                           onChange={() => toggleDoc(doc)}
                           style={{ accentColor: '#c4722a', width: 14, height: 14, marginTop: 2, flexShrink: 0 }}
                         />
-                        <span style={{ fontFamily: 'sans-serif', fontSize: 12, color: selectedDocs.includes(doc) ? '#e8a96a' : '#c8c3bb', lineHeight: 1.4 }}>{doc}</span>
+                        <span style={{ fontFamily: 'sans-serif', fontSize: 12, color: selectedDocs.includes(doc) ? '#e8a96a' : (darkMode ? '#a8a39b' : '#c8c3bb'), lineHeight: 1.4 }}>{doc}</span>
                       </label>
                     ))}
                   </div>
@@ -298,9 +300,9 @@ export default function ExtensionEmailGenerator() {
               {TONES.map(t => (
                 <button key={t.id} onClick={() => setTone(t.id)} style={{
                   padding: '9px 8px', borderRadius: 6,
-                  border: '1px solid ' + (tone === t.id ? '#c4722a' : 'rgba(247,244,239,0.15)'),
+                  border: '1px solid ' + (tone === t.id ? '#c4722a' : (darkMode ? 'rgba(232,229,224,0.15)' : 'rgba(247,244,239,0.15)')),
                   background: tone === t.id ? '#c4722a' : 'transparent',
-                  color: tone === t.id ? 'white' : '#c8c3bb',
+                  color: tone === t.id ? 'white' : (darkMode ? '#a8a39b' : '#c8c3bb'),
                   fontFamily: 'sans-serif', fontSize: 12,
                   cursor: 'pointer', fontWeight: tone === t.id ? 600 : 400,
                 }}>
@@ -321,31 +323,31 @@ export default function ExtensionEmailGenerator() {
         </div>
 
         {/* OUTPUT */}
-        <div className="tool-content" style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280 }}>
-          <div style={{ fontSize: 22, fontWeight: 400, color: '#1a1a2e' }}>
+        <div className="tool-content" style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280, background: darkMode ? '#0a0a0e' : 'transparent' }}>
+          <div style={{ fontSize: 22, fontWeight: 400, color: darkMode ? '#e8e5e0' : '#1a1a2e' }}>
             Generated <span style={{ color: '#c4722a' }}>Notice</span>
           </div>
 
           {!result && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 240, opacity: 0.35, textAlign: 'center' }}>
               <div style={{ fontSize: 36 }}>✉</div>
-              <div style={{ fontFamily: 'sans-serif', fontSize: 14, color: '#8a8577' }}>Select return type, check off what's still missing, and generate a follow-up</div>
+              <div style={{ fontFamily: 'sans-serif', fontSize: 14, color: darkMode ? '#a8a39b' : '#8a8577' }}>Select return type, check off what's still missing, and generate a follow-up</div>
             </div>
           )}
 
           {result && (
             <>
-              <div style={{ background: 'white', border: '1px solid #d4cfc6', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 12px rgba(26,26,46,0.06)' }}>
-                <div className="result-header-row" style={{ padding: '14px 20px', borderBottom: '1px solid #d4cfc6', background: '#ede9e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: darkMode ? '#1a1a2e' : 'white', border: `1px solid ${darkMode ? '#2a2a42' : '#d4cfc6'}`, borderRadius: 12, overflow: 'hidden', boxShadow: `0 2px 12px ${darkMode ? 'rgba(0,0,0,0.3)' : 'rgba(26,26,46,0.06)'}` }}>
+                <div className="result-header-row" style={{ padding: '14px 20px', borderBottom: `1px solid ${darkMode ? '#2a2a42' : '#d4cfc6'}`, background: darkMode ? '#2a2a42' : '#ede9e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ fontFamily: 'Georgia, serif', fontSize: 15, fontWeight: 600, color: '#1a1a2e' }}>{clientName}</div>
-                    <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: '#8a8577', marginTop: 2 }}>
+                    <div style={{ fontFamily: 'Georgia, serif', fontSize: 15, fontWeight: 600, color: darkMode ? '#e8e5e0' : '#1a1a2e' }}>{clientName}</div>
+                    <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: darkMode ? '#a8a39b' : '#8a8577', marginTop: 2 }}>
                       {returnType === 'business' ? 'Business' : 'Personal'} · Docs due {docDeadline}
                     </div>
                   </div>
                   <button onClick={copyEmail} style={{
                     padding: '7px 14px',
-                    background: copied ? '#3d7a5e' : '#1a1a2e',
+                    background: copied ? '#3d7a5e' : darkMode ? '#0a0a0e' : '#1a1a2e',
                     color: '#f7f4ef', border: 'none', borderRadius: 6,
                     fontFamily: 'sans-serif', fontSize: 12, fontWeight: 500, cursor: 'pointer',
                   }}>
@@ -353,12 +355,12 @@ export default function ExtensionEmailGenerator() {
                   </button>
                 </div>
 
-                <div style={{ padding: '10px 20px', borderBottom: '1px solid #d4cfc6', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: 'sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a8577', minWidth: 52 }}>Subject</span>
-                  <span style={{ fontFamily: 'sans-serif', fontSize: 13, fontWeight: 500, color: '#1a1a2e' }}>{result.subject}</span>
+                <div style={{ padding: '10px 20px', borderBottom: `1px solid ${darkMode ? '#2a2a42' : '#d4cfc6'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: 'sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: darkMode ? '#a8a39b' : '#8a8577', minWidth: 52 }}>Subject</span>
+                  <span style={{ fontFamily: 'sans-serif', fontSize: 13, fontWeight: 500, color: darkMode ? '#e8e5e0' : '#1a1a2e' }}>{result.subject}</span>
                 </div>
 
-                <div style={{ padding: '20px', fontFamily: 'sans-serif', fontSize: 14, lineHeight: 1.85, color: '#2d2d3e', whiteSpace: 'pre-wrap', fontWeight: 300 }}>
+                <div style={{ padding: '20px', fontFamily: 'sans-serif', fontSize: 14, lineHeight: 1.85, color: darkMode ? '#c8c3bb' : '#2d2d3e', whiteSpace: 'pre-wrap', fontWeight: 300 }}>
                   {result.body.split('**').map((part, i) =>
                     i % 2 === 1 ? <strong key={i}>{part}</strong> : part
                   )}
@@ -366,10 +368,10 @@ export default function ExtensionEmailGenerator() {
               </div>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={generate} style={{ padding: '9px 18px', background: 'transparent', border: '1px solid #d4cfc6', borderRadius: 6, fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577', cursor: 'pointer' }}>
+                <button onClick={generate} style={{ padding: '9px 18px', background: 'transparent', border: `1px solid ${darkMode ? '#2a2a42' : '#d4cfc6'}`, borderRadius: 6, fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#a8a39b' : '#8a8577', cursor: 'pointer' }}>
                   ↺ Regenerate
                 </button>
-                <button onClick={reset} style={{ padding: '9px 18px', background: 'transparent', border: '1px solid #d4cfc6', borderRadius: 6, fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577', cursor: 'pointer' }}>
+                <button onClick={reset} style={{ padding: '9px 18px', background: 'transparent', border: `1px solid ${darkMode ? '#2a2a42' : '#d4cfc6'}`, borderRadius: 6, fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#a8a39b' : '#8a8577', cursor: 'pointer' }}>
                   + New Client
                 </button>
               </div>
@@ -391,9 +393,10 @@ function Section({ label, children }) {
 }
 function Divider() { return <div style={{ width: 36, height: 1, background: '#c4722a', opacity: 0.4 }} /> }
 function Field({ label, children, error }) {
+  const { darkMode } = useDarkMode()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#c8c3bb' }}>
+      <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: darkMode ? '#a8a39b' : '#c8c3bb' }}>
         {label}{error && <span style={{ color: '#e8a96a', marginLeft: 6 }}>{error}</span>}
       </label>
       {children}
@@ -401,11 +404,12 @@ function Field({ label, children, error }) {
   )
 }
 function TInput({ highlight, ...props }) {
+  const { darkMode } = useDarkMode()
   return (
     <input {...props} style={{
       fontFamily: 'sans-serif', fontSize: 14,
-      background: 'rgba(247,244,239,0.07)',
-      border: '1px solid ' + (highlight ? '#c4722a' : 'rgba(247,244,239,0.18)'),
+      background: darkMode ? 'rgba(232,229,224,0.07)' : 'rgba(247,244,239,0.07)',
+      border: '1px solid ' + (highlight ? '#c4722a' : (darkMode ? 'rgba(232,229,224,0.18)' : 'rgba(247,244,239,0.18)')),
       borderRadius: 6, padding: '9px 11px', color: '#f7f4ef',
       outline: 'none', width: '100%', boxSizing: 'border-box',
     }} />

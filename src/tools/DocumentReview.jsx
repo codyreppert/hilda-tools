@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useDarkMode } from '../App'
 
 const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
 const SYSTEM_PROMPT = `You are a tax document extraction assistant for a CPA named Hilda Gonzalez.
@@ -531,6 +532,7 @@ async function updateChecklist({ clientName, sections, onStatus }) {
 }
 
 export default function DocumentReview() {
+  const { darkMode } = useDarkMode()
   const [clientName, setClientName]           = useState('')
   const [clientNameError, setClientNameError] = useState(false)
   const [currentFiles, setCurrentFiles]       = useState([])
@@ -788,15 +790,15 @@ export default function DocumentReview() {
       )}
 
       {/* Tool header */}
-      <div style={{ background: '#1a1a2e', padding: '16px 24px', borderBottom: '1px solid rgba(247,244,239,0.06)' }}>
+      <div style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', padding: '16px 24px', borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}` }}>
         <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8a96a', fontFamily: 'sans-serif', marginBottom: 3 }}>Tool 03</div>
         <div style={{ fontSize: 17, color: '#f7f4ef', fontFamily: 'Georgia, serif' }}>Document Extraction & Review</div>
       </div>
 
-      <div className="tool-two-col" style={{ flexWrap: 'wrap' }}>
+      <div className="tool-two-col" style={{ flexWrap: 'wrap', background: darkMode ? '#0a0a0e' : 'transparent' }}>
 
         {/* LEFT SIDEBAR */}
-        <div id="doc-review-sidebar" className="tool-sidebar" style={{ background: '#1a1a2e', padding: '24px 20px', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
+        <div id="doc-review-sidebar" className="tool-sidebar" style={{ background: darkMode ? '#0a0a0e' : '#1a1a2e', padding: '24px 20px', width: 300, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
 
           <Section label="Client">
             <Field label="Client Name" error={clientNameError ? 'Required' : ''}>
@@ -819,9 +821,9 @@ export default function DocumentReview() {
                   onClick={() => setTaxYear(y)}
                   style={{
                     flex: 1, padding: '8px 4px', borderRadius: 6, textAlign: 'center',
-                    border: '1px solid ' + (taxYear === y ? '#c4722a' : 'rgba(247,244,239,0.15)'),
+                    border: '1px solid ' + (taxYear === y ? '#c4722a' : (darkMode ? 'rgba(232,229,224,0.15)' : 'rgba(247,244,239,0.15)')),
                     background: taxYear === y ? 'rgba(196,114,42,0.15)' : 'transparent',
-                    color: taxYear === y ? '#e8a96a' : '#8a8577',
+                    color: taxYear === y ? '#e8a96a' : (darkMode ? '#a8a39b' : '#8a8577'),
                     fontFamily: 'sans-serif', fontSize: 12, fontWeight: taxYear === y ? 600 : 400,
                     cursor: 'pointer',
                   }}
@@ -836,7 +838,7 @@ export default function DocumentReview() {
 
           {/* Source mode toggle */}
           <Section label="Document Source">
-            <div style={{ display: 'flex', gap: 0, borderRadius: 7, overflow: 'hidden', border: '1px solid rgba(247,244,239,0.15)' }}>
+            <div style={{ display: 'flex', gap: 0, borderRadius: 7, overflow: 'hidden', border: `1px solid ${darkMode ? 'rgba(232,229,224,0.15)' : 'rgba(247,244,239,0.15)'}` }}>
               {[{ id: false, label: 'Upload Files' }, { id: true, label: 'Google Drive' }].map(({ id, label }) => (
                 <button
                   key={label}
@@ -844,7 +846,7 @@ export default function DocumentReview() {
                   style={{
                     flex: 1, padding: '8px 4px', border: 'none', textAlign: 'center',
                     background: driveMode === id ? 'rgba(196,114,42,0.2)' : 'transparent',
-                    color: driveMode === id ? '#e8a96a' : '#8a8577',
+                    color: driveMode === id ? '#e8a96a' : (darkMode ? '#a8a39b' : '#8a8577'),
                     fontFamily: 'sans-serif', fontSize: 12, fontWeight: driveMode === id ? 600 : 400,
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}
@@ -1222,9 +1224,10 @@ function Divider() {
 }
 
 function Field({ label, children, error }) {
+  const { darkMode } = useDarkMode()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#c8c3bb' }}>
+      <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: darkMode ? '#a8a39b' : '#c8c3bb' }}>
         {label}{error && <span style={{ color: '#e8a96a', marginLeft: 6 }}>{error}</span>}
       </label>
       {children}
@@ -1233,11 +1236,12 @@ function Field({ label, children, error }) {
 }
 
 function TInput({ highlight, ...props }) {
+  const { darkMode } = useDarkMode()
   return (
     <input {...props} style={{
       fontFamily: 'sans-serif', fontSize: 14,
-      background: 'rgba(247,244,239,0.07)',
-      border: '1px solid ' + (highlight ? '#c4722a' : 'rgba(247,244,239,0.18)'),
+      background: darkMode ? 'rgba(232,229,224,0.07)' : 'rgba(247,244,239,0.07)',
+      border: '1px solid ' + (highlight ? '#c4722a' : (darkMode ? 'rgba(232,229,224,0.18)' : 'rgba(247,244,239,0.18)')),
       borderRadius: 6, padding: '9px 11px', color: '#f7f4ef',
       outline: 'none', width: '100%', boxSizing: 'border-box',
     }} />
@@ -1245,6 +1249,7 @@ function TInput({ highlight, ...props }) {
 }
 
 function FileDropZone({ label, multiple, files, onFiles, muted }) {
+  const { darkMode } = useDarkMode()
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
   const [sizeWarning, setSizeWarning] = useState('')
@@ -1264,27 +1269,27 @@ function FileDropZone({ label, multiple, files, onFiles, muted }) {
         onDragLeave={() => setDragging(false)}
         onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
         style={{
-          border: '1px dashed ' + (dragging ? '#c4722a' : muted ? 'rgba(247,244,239,0.12)' : 'rgba(247,244,239,0.25)'),
+          border: '1px dashed ' + (dragging ? '#c4722a' : muted ? (darkMode ? 'rgba(232,229,224,0.12)' : 'rgba(247,244,239,0.12)') : (darkMode ? 'rgba(232,229,224,0.25)' : 'rgba(247,244,239,0.25)')),
           borderRadius: 8, padding: '16px 12px', textAlign: 'center',
           cursor: 'pointer', background: dragging ? 'rgba(196,114,42,0.08)' : 'transparent',
           transition: 'all 0.15s',
         }}
       >
         <div style={{ fontSize: 20, marginBottom: 6 }}>📄</div>
-        <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: files.length > 0 ? '#e8a96a' : muted ? '#8a8577' : '#c8c3bb' }}>
+        <div style={{ fontFamily: 'sans-serif', fontSize: 12, color: files.length > 0 ? '#e8a96a' : muted ? (darkMode ? '#a8a39b' : '#8a8577') : (darkMode ? '#a8a39b' : '#c8c3bb') }}>
           {files.length > 0 ? `${files.length} file${files.length > 1 ? 's' : ''} selected` : label}
         </div>
-        <div style={{ fontFamily: 'sans-serif', fontSize: 10, color: '#8a8577', marginTop: 4 }}>PDF only · Click or drag & drop</div>
+        <div style={{ fontFamily: 'sans-serif', fontSize: 10, color: darkMode ? '#a8a39b' : '#8a8577', marginTop: 4 }}>PDF only · Click or drag & drop</div>
       </div>
 
       {files.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
           {files.map((f, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(247,244,239,0.06)', borderRadius: 4, padding: '5px 8px' }}>
-              <span style={{ fontFamily: 'sans-serif', fontSize: 11, color: '#c8c3bb', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)', borderRadius: 4, padding: '5px 8px' }}>
+              <span style={{ fontFamily: 'sans-serif', fontSize: 11, color: darkMode ? '#a8a39b' : '#c8c3bb', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
               <button
                 onClick={e => { e.stopPropagation(); onFiles(files.filter((_, j) => j !== i)) }}
-                style={{ background: 'none', border: 'none', color: '#8a8577', cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1 }}
+                style={{ background: 'none', border: 'none', color: darkMode ? '#a8a39b' : '#8a8577', cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1 }}
               >✕</button>
             </div>
           ))}

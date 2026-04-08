@@ -537,7 +537,7 @@ export default function ClientDocumentDashboard() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="tool-content" style={{ flex: 1, background: '#f7f4ef', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
+        <div className="tool-content" style={{ flex: 1, background: darkMode ? '#0a0a0e' : '#f7f4ef', overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
           {!selectedClient && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300, gap: 10, opacity: 0.4 }}>
               <div style={{ fontSize: 36 }}>📋</div>

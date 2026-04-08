@@ -949,7 +949,7 @@ export default function DocumentReview() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="tool-content" style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280, background: '#faf9f7', position: 'relative' }}>
+        <div className="tool-content" style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280, background: darkMode ? '#0a0a0e' : '#faf9f7', position: 'relative' }}>
 
           {/* Confirmed watermark */}
           {phase === 'confirmed' && (
@@ -958,7 +958,7 @@ export default function DocumentReview() {
             </div>
           )}
 
-          <div style={{ fontSize: 22, fontWeight: 400, color: '#1a1a2e', fontFamily: 'Georgia, serif' }}>
+          <div style={{ fontSize: 22, fontWeight: 400, color: darkMode ? '#e8e5e0' : '#1a1a2e', fontFamily: 'Georgia, serif' }}>
             Extracted <span style={{ color: '#c4722a' }}>Figures</span>
           </div>
 

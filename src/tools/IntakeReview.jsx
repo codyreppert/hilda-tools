@@ -199,7 +199,7 @@ export default function IntakeReview() {
       </div>
 
       {/* Right panel */}
-      <div style={{ flex: 1, overflowY: 'auto', background: '#f7f4ef' }}>
+      <div style={{ flex: 1, overflowY: 'auto', background: darkMode ? '#0a0a0e' : '#f7f4ef' }}>
         {!selected ? (
           <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>

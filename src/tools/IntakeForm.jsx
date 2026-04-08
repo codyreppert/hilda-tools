@@ -590,7 +590,7 @@ export default function IntakeForm() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: darkMode ? '#0a0a0e' : 'transparent' }}>
         {submitted ? (
           <ThankYou />
         ) : mode === null ? (
@@ -621,10 +621,10 @@ function ModePicker({ onSelect }) {
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
       <div style={{ width: '100%', maxWidth: 600 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 400, color: '#1a1a2e', marginBottom: 10 }}>
+          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 400, color: darkMode ? '#e8e5e0' : '#1a1a2e', marginBottom: 10 }}>
             Welcome — let's get started
           </h2>
-          <p style={{ fontFamily: 'sans-serif', fontSize: 15, color: '#8a8577', lineHeight: 1.7 }}>
+          <p style={{ fontFamily: 'sans-serif', fontSize: 15, color: darkMode ? '#a8a39b' : '#8a8577', lineHeight: 1.7 }}>
             Tell us a bit about your tax situation so Hilda can reach out with the right next steps.
           </p>
         </div>
@@ -649,6 +649,7 @@ function ModePicker({ onSelect }) {
 }
 
 function ModeCard({ icon, title, desc, recommended, onClick }) {
+  const { darkMode } = useDarkMode()
   const [hovered, setHovered] = useState(false)
   return (
     <div
@@ -656,14 +657,14 @@ function ModeCard({ icon, title, desc, recommended, onClick }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'white',
-        border: `2px solid ${hovered ? '#c4722a' : '#d4cfc6'}`,
+        background: darkMode ? '#1a1a2e' : 'white',
+        border: `2px solid ${hovered ? '#c4722a' : (darkMode ? '#2a2a42' : '#d4cfc6')}`,
         borderRadius: 14,
         padding: '28px 24px',
         cursor: 'pointer',
         position: 'relative',
         transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        boxShadow: hovered ? '0 4px 20px rgba(196,114,42,0.12)' : 'none',
+        boxShadow: hovered ? `0 4px 20px ${darkMode ? 'rgba(196,114,42,0.2)' : 'rgba(196,114,42,0.12)'}` : 'none',
         transform: hovered ? 'translateY(-2px)' : 'none',
       }}
     >
@@ -676,8 +677,8 @@ function ModeCard({ icon, title, desc, recommended, onClick }) {
         }}>Recommended</div>
       )}
       <div style={{ fontSize: 32, marginBottom: 14 }}>{icon}</div>
-      <div style={{ fontFamily: 'Georgia, serif', fontSize: 17, color: '#1a1a2e', marginBottom: 8 }}>{title}</div>
-      <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577', lineHeight: 1.6 }}>{desc}</div>
+      <div style={{ fontFamily: 'Georgia, serif', fontSize: 17, color: darkMode ? '#e8e5e0' : '#1a1a2e', marginBottom: 8 }}>{title}</div>
+      <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#a8a39b' : '#8a8577', lineHeight: 1.6 }}>{desc}</div>
     </div>
   )
 }

@@ -509,10 +509,10 @@ export default function ClientDocumentDashboard() {
                       {client.returnType}
                     </div>
                   </div>
-                  <div style={{ height: 4, background: 'rgba(247,244,239,0.08)', borderRadius: 2, marginBottom: 5, overflow: 'hidden' }}>
+                  <div style={{ height: 4, background: darkMode ? 'rgba(232,229,224,0.08)' : 'rgba(247,244,239,0.08)', borderRadius: 2, marginBottom: 5, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 2, transition: 'width 0.3s' }} />
                   </div>
-                  <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: '#8a8577' }}>
+                  <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: darkMode ? '#c8c3bb' : '#8a8577' }}>
                     <span style={{ color: '#3d7a5e' }}>{verified} verified</span>
                     {detected > 0 && <span style={{ color: '#c4722a' }}> · {detected} detected</span>}
                     {notStarted > 0 && <span> · {notStarted} not started</span>}
@@ -551,8 +551,8 @@ export default function ClientDocumentDashboard() {
               <div className="dashboard-right" style={{ padding: '28px 28px' }}>
                 <div className="client-header-row" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                   <div>
-                    <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#1a1a2e', marginBottom: 4 }}>{selectedClient.name}</div>
-                    <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577' }}>
+                    <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: darkMode ? '#e8e5e0' : '#1a1a2e', marginBottom: 4 }}>{selectedClient.name}</div>
+                    <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#c8c3bb' : '#8a8577' }}>
                       {selectedClient.returnType} Return &nbsp;·&nbsp;
                       <span style={{ color: '#3d7a5e' }}>{verified} verified</span>
                       {detected > 0 && <span style={{ color: '#c4722a' }}> · {detected} detected</span>}
@@ -594,11 +594,11 @@ export default function ClientDocumentDashboard() {
                     const catVerified = items.filter(i => i.status === 'Verified').length
                     return (
                       <div key={category}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid #d4cfc6' }}>
-                          <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'sans-serif', fontWeight: 600, color: '#8a8577' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${darkMode ? '#3a3a4e' : '#d4cfc6'}` }}>
+                          <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'sans-serif', fontWeight: 600, color: darkMode ? '#c8c3bb' : '#8a8577' }}>
                             {category}
                           </div>
-                          <div style={{ fontSize: 11, fontFamily: 'sans-serif', color: catVerified === items.length ? '#3d7a5e' : '#8a8577' }}>
+                          <div style={{ fontSize: 11, fontFamily: 'sans-serif', color: catVerified === items.length ? '#3d7a5e' : (darkMode ? '#c8c3bb' : '#8a8577') }}>
                             {catVerified} / {items.length}
                           </div>
                         </div>
@@ -642,7 +642,7 @@ export default function ClientDocumentDashboard() {
             onClick={e => { if (e.target === e.currentTarget) setShowEmailModal(false) }}
           >
             <div style={{
-              background: '#1a1a2e', borderRadius: 12,
+              background: darkMode ? '#0a0a0e' : '#1a1a2e', borderRadius: 12,
               width: 600, maxWidth: 'calc(100vw - 32px)',
               maxHeight: 'calc(100vh - 48px)',
               display: 'flex', flexDirection: 'column',
@@ -651,24 +651,24 @@ export default function ClientDocumentDashboard() {
             }}>
               <div style={{
                 padding: '18px 24px',
-                borderBottom: '1px solid rgba(247,244,239,0.08)',
+                borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.08)' : 'rgba(247,244,239,0.08)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <div>
                   <div style={{ fontFamily: 'Georgia, serif', fontSize: 16, color: '#f7f4ef' }}>Follow-Up Email Draft</div>
-                  <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: '#8a8577', marginTop: 3 }}>
+                  <div style={{ fontFamily: 'sans-serif', fontSize: 11, color: darkMode ? '#c8c3bb' : '#8a8577', marginTop: 3 }}>
                     {selectedClient.name} · {notStartedCount > 0 ? `${notStartedCount} item${notStartedCount !== 1 ? 's' : ''} not started` : 'All items complete'}
                   </div>
                 </div>
-                <button onClick={() => setShowEmailModal(false)} style={{ background: 'none', border: 'none', color: '#8a8577', cursor: 'pointer', fontSize: 18 }}>✕</button>
+                <button onClick={() => setShowEmailModal(false)} style={{ background: 'none', border: 'none', color: darkMode ? '#c8c3bb' : '#8a8577', cursor: 'pointer', fontSize: 18 }}>✕</button>
               </div>
               <div style={{
                 padding: '12px 24px',
-                borderBottom: '1px solid rgba(247,244,239,0.06)',
-                background: 'rgba(247,244,239,0.03)',
+                borderBottom: `1px solid ${darkMode ? 'rgba(232,229,224,0.06)' : 'rgba(247,244,239,0.06)'}`,
+                background: darkMode ? 'rgba(232,229,224,0.02)' : 'rgba(247,244,239,0.03)',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
-                <span style={{ fontFamily: 'sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a8577', minWidth: 52 }}>Subject</span>
+                <span style={{ fontFamily: 'sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: darkMode ? '#c8c3bb' : '#8a8577', minWidth: 52 }}>Subject</span>
                 <span style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#e8a96a', fontWeight: 500 }}>{email.subject}</span>
               </div>
               <div style={{
@@ -680,13 +680,13 @@ export default function ClientDocumentDashboard() {
               </div>
               <div style={{
                 padding: '14px 24px',
-                borderTop: '1px solid rgba(247,244,239,0.08)',
+                borderTop: `1px solid ${darkMode ? 'rgba(232,229,224,0.08)' : 'rgba(247,244,239,0.08)'}`,
                 display: 'flex', justifyContent: 'flex-end', gap: 10,
               }}>
                 <button onClick={() => setShowEmailModal(false)} style={{
                   padding: '8px 16px', background: 'transparent',
-                  border: '1px solid rgba(247,244,239,0.18)', borderRadius: 6,
-                  fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577', cursor: 'pointer',
+                  border: `1px solid ${darkMode ? 'rgba(232,229,224,0.18)' : 'rgba(247,244,239,0.18)'}`, borderRadius: 6,
+                  fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#c8c3bb' : '#8a8577', cursor: 'pointer',
                 }}>Close</button>
                 <button onClick={copyEmail} style={{
                   padding: '8px 20px',
@@ -712,13 +712,13 @@ export default function ClientDocumentDashboard() {
           onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}
         >
           <form onSubmit={handleAddClient} className="modal-form" style={{
-            background: 'white', borderRadius: 12, padding: '28px 28px',
+            background: darkMode ? '#1a1a2e' : 'white', borderRadius: 12, padding: '28px 28px',
             width: 360, display: 'flex', flexDirection: 'column', gap: 16,
             boxShadow: '0 8px 40px rgba(26,26,46,0.18)',
           }}>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: 18, color: '#1a1a2e' }}>Add Client</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: 18, color: darkMode ? '#e8e5e0' : '#1a1a2e' }}>Add Client</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#8a8577' }}>Client Name</label>
+              <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: darkMode ? '#c8c3bb' : '#8a8577' }}>Client Name</label>
               <input
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
@@ -726,20 +726,21 @@ export default function ClientDocumentDashboard() {
                 autoFocus
                 style={{
                   fontFamily: 'sans-serif', fontSize: 14,
-                  border: '1px solid #d4cfc6', borderRadius: 6,
-                  padding: '9px 11px', color: '#1a1a2e', outline: 'none',
+                  border: `1px solid ${darkMode ? '#3a3a4e' : '#d4cfc6'}`, borderRadius: 6,
+                  padding: '9px 11px', color: darkMode ? '#e8e5e0' : '#1a1a2e', outline: 'none',
+                  background: darkMode ? '#0a0a0e' : 'white',
                 }}
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: '#8a8577' }}>Return Type</label>
+              <label style={{ fontFamily: 'sans-serif', fontSize: 12, color: darkMode ? '#c8c3bb' : '#8a8577' }}>Return Type</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {['Personal', 'Business'].map(t => (
                   <button key={t} type="button" onClick={() => setNewType(t)} style={{
                     flex: 1, padding: '9px', borderRadius: 6,
-                    border: '1px solid ' + (newType === t ? '#c4722a' : '#d4cfc6'),
+                    border: '1px solid ' + (newType === t ? '#c4722a' : (darkMode ? '#3a3a4e' : '#d4cfc6')),
                     background: newType === t ? 'rgba(196,114,42,0.08)' : 'transparent',
-                    color: newType === t ? '#c4722a' : '#8a8577',
+                    color: newType === t ? '#c4722a' : (darkMode ? '#c8c3bb' : '#8a8577'),
                     fontFamily: 'sans-serif', fontSize: 13, fontWeight: newType === t ? 600 : 400,
                     cursor: 'pointer',
                   }}>{t}</button>
@@ -749,8 +750,8 @@ export default function ClientDocumentDashboard() {
             <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
               <button type="button" onClick={() => setShowModal(false)} style={{
                 flex: 1, padding: '10px', background: 'transparent',
-                border: '1px solid #d4cfc6', borderRadius: 6,
-                fontFamily: 'sans-serif', fontSize: 13, color: '#8a8577', cursor: 'pointer',
+                border: `1px solid ${darkMode ? '#3a3a4e' : '#d4cfc6'}`, borderRadius: 6,
+                fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#c8c3bb' : '#8a8577', cursor: 'pointer',
               }}>Cancel</button>
               <button type="submit" disabled={creating || !newName.trim()} style={{
                 flex: 2, padding: '10px', background: creating ? '#d4cfc6' : '#c4722a',
@@ -768,6 +769,7 @@ export default function ClientDocumentDashboard() {
 }
 
 function ItemRow({ item, saving, onStatusChange, onNotesBlur }) {
+  const { darkMode } = useDarkMode()
   const [notes, setNotes] = useState(item.notes)
   const inputRef = useRef()
 
@@ -781,12 +783,12 @@ function ItemRow({ item, saving, onStatusChange, onNotesBlur }) {
       alignItems: 'start',
     }}>
       <div>
-        <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#2d2d3e', lineHeight: 1.4 }}>
+        <div style={{ fontFamily: 'sans-serif', fontSize: 13, color: darkMode ? '#e8e5e0' : '#2d2d3e', lineHeight: 1.4 }}>
           {item.item}
-          {saving && <span style={{ fontSize: 10, color: '#8a8577', marginLeft: 8, fontStyle: 'italic' }}>saving…</span>}
+          {saving && <span style={{ fontSize: 10, color: darkMode ? '#c8c3bb' : '#8a8577', marginLeft: 8, fontStyle: 'italic' }}>saving…</span>}
         </div>
         {item.driveFileName && (
-          <div style={{ fontSize: 11, fontFamily: 'sans-serif', color: '#8a8577', fontStyle: 'italic', marginTop: 2 }}>
+          <div style={{ fontSize: 11, fontFamily: 'sans-serif', color: darkMode ? '#c8c3bb' : '#8a8577', fontStyle: 'italic', marginTop: 2 }}>
             {item.driveFileName}
           </div>
         )}
@@ -800,8 +802,8 @@ function ItemRow({ item, saving, onStatusChange, onNotesBlur }) {
             marginTop: 5, width: '100%', boxSizing: 'border-box',
             fontFamily: 'sans-serif', fontSize: 12,
             background: 'transparent', border: 'none',
-            borderBottom: '1px solid #d4cfc6',
-            color: '#8a8577', outline: 'none', padding: '2px 0',
+            borderBottom: `1px solid ${darkMode ? '#3a3a4e' : '#d4cfc6'}`,
+            color: darkMode ? '#e8e5e0' : '#8a8577', outline: 'none', padding: '2px 0',
           }}
         />
       </div>
@@ -811,7 +813,7 @@ function ItemRow({ item, saving, onStatusChange, onNotesBlur }) {
         style={{
           fontFamily: 'sans-serif', fontSize: 12, fontWeight: 600,
           color: STATUS_COLORS[item.status] || '#8a8577',
-          background: 'white', border: '1px solid #d4cfc6',
+          background: darkMode ? '#1a1a2e' : 'white', border: `1px solid ${darkMode ? '#3a3a4e' : '#d4cfc6'}`,
           borderRadius: 6, padding: '5px 8px', cursor: 'pointer', outline: 'none',
         }}
       >
